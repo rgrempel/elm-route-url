@@ -10,6 +10,7 @@
         "RouteHash"
     ],
     "dependencies": {
+        "evancz/elm-http": "2.0.0 <= v < 3.0.0",
         "elm-lang/core": "2.0.0 <= v < 3.0.0",
         "Apanatshka/elm-signal-extra": "5.6.0 <= v < 6.0.0",
         "TheSeamau5/elm-history" : "1.0.0 <= v < 2.0.0"
