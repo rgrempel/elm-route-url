@@ -9,7 +9,8 @@ digraph "signals" {
 
     config_models
         [ label = "config.models :\nSignal model"
-        , shape = polygon
+        , shape = "diamond"
+        , style = "bold"
         ];
 
     module_changes
@@ -80,7 +81,7 @@ digraph "signals" {
         ]
 
     module_start
-        [ label = "start : Signal (Task () ())"
+        [ label = "start :\nSignal (Task () ())"
         ];
 
     module_action_tasks -> module_start
@@ -89,7 +90,8 @@ digraph "signals" {
 
     config_port
         [ label = "port"
-        , shape = "polygon"
+        , shape = "diamond"
+        , style = "bold"
         ];
 
     module_start -> config_port
