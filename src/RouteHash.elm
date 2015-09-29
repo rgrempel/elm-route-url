@@ -15,7 +15,7 @@ your app to be partially bookmark-able.
 To use this module, you will need to configure it using the `start` function,
 as described below.
 
-There is [additional documentation](https://github.com/rgrempel/elm-route-hash")
+There is [additional documentation](https://github.com/rgrempel/elm-route-hash)
 available in the README in the Github repository.
 
 # Configuration
