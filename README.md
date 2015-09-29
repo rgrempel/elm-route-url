@@ -590,6 +590,8 @@ location2action list =
 ## <a name="signal-graph">What this module does to the signal graph</a>
 
 You may find it useful to know what `start` does to the signal graph. In these
-matters, a picture is worth a thousand words, so here's a picture:
+matters, a picture is worth a thousand words, so here's a picture.
+
+![Signal graph](https://cdn.rawgit.com/rgrempel/elm-route-hash/master/signals.svg)
 
 

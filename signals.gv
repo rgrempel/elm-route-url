@@ -1,0 +1,96 @@
+digraph "signals" {
+    node
+        [ fontsize = 12
+        ];
+    
+    edge 
+        [ fontsize = 12
+        ];
+
+    config_models
+        [ label = "config.models :\nSignal model"
+        , shape = polygon
+        ];
+
+    module_changes
+        [ label = "changes :\nSignal (model, model)"
+        ];
+
+    config_models -> module_changes
+
+    history_hash
+        [ label = "History.hash :\nSignal String"
+        , shape = "box"
+        ];
+
+    module_locations
+        [ label = "locations :\nSignal (List String)"
+        ];
+
+    history_hash -> module_locations
+        [ label = "  config.prefix"
+        , style = "bold"
+        ]
+
+    module_possible_updates
+        [ label = "possibleUpdates :\nSignal (Maybe HashUpdate)"
+        ];
+
+    module_changes -> module_possible_updates
+        [ label = "  config.delta2update"
+        , style = "bold"
+        ];
+
+    module_actual_updates
+        [ label = "actualUpdates :\nSignal (HashUpdate)"
+        ];
+
+    module_possible_updates -> module_actual_updates
+
+    module_locations -> module_actual_updates
+        [ style = "dashed"
+        ];
+
+    module_update_tasks
+        [ label = "updateTasks :\nSignal (Task () ())"
+        ];
+
+    module_actions
+        [ label = "actions :\nSignal (List Action)"
+        ];
+
+    module_locations -> module_actions
+        [ label = "  config.location2action"
+        , style = "bold"
+        ];
+
+    module_actual_updates -> module_actions
+        [ style = "dashed"
+        ];
+
+    module_actual_updates -> module_update_tasks
+
+    module_action_tasks
+        [ label = "actionTasks :\nSignal (Task () ())"
+        ];
+
+    module_actions -> module_action_tasks
+        [ label = "  config.address"
+        , style = "bold"
+        ]
+
+    module_start
+        [ label = "start : Signal (Task () ())"
+        ];
+
+    module_action_tasks -> module_start
+
+    module_update_tasks -> module_start
+
+    config_port
+        [ label = "port"
+        , shape = "polygon"
+        ];
+
+    module_start -> config_port
+}
