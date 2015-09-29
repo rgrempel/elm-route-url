@@ -211,12 +211,12 @@ to construct a `HashUpdate`. In other words, if you supply:
 then the module normalizes it as follows:
 
 *   First, we uriEncode the parts of the list, which gives us `["somedata",
-    "following", "the%20hash"].
+    "following", "the%20hash"]`.
 
 *   Then, we join the list with a "/", giving us `"somedata/following/the%20hash"`
 
 *   Finally, we prepend the same prefix (again, by default "#!/"). So, in this
-    example, we'd be left with "#!/somedata/following/the%20hash"
+    example, we'd be left with `"#!/somedata/following/the%20hash"`
 
 So, that is what the location would ultimately be set to, when you provide
 a `List String` to construct a `HashUpdate`.
@@ -362,7 +362,7 @@ Here is the significance of each of the fields in the `Config` record.
     ignore the first parameter.
 
     See [further comments](#implementing-delta2update) on implementing
-    delta2update` below.
+    `delta2update` below.
 
 *   <a name="location2action">`location2action : List String -> List action`</a>
 
@@ -372,8 +372,8 @@ Here is the significance of each of the fields in the `Config` record.
     Essentially, your `location2action` should return actions that are the
     reverse of what your `delta2update` function produced. That is, the `List
     String` you get back in `location2action` is the `List String` that your
-    `delta2path` used to create a `HashUpdate`. So, however you encoded your
-    state in `delta2path`, you now need to interpret that in `location2action`
+    `delta2update` used to create a `HashUpdate`. So, however you encoded your
+    state in `delta2update`, you now need to interpret that in `location2action`
     in order to return actions which will produce the desired state.
 
     See [further comments](#implementing-location2action) on implementing
@@ -459,7 +459,7 @@ keeps track of what we might call the 'virtual page' or the 'focus' or the
 'view model' -- that is, something which tells you what the user is currently
 looking at.
 
-So, the job of delta2update is to translate whatever that is into a `List
+So, the job of `delta2update` is to translate whatever that is into a `List
 String`. Now, you can keep as much or as little of the state in the URL as you
 like. You'll basically get the `List String` back in your `location2action`
 function, so it's up to you to decide how to encode some of your state into a
@@ -537,7 +537,7 @@ equivalent `location2action` functions? For the super-module, it might
 look like this (assuming the existence of the named actions):
 
 ```elm
-location2action : List String -> List action
+location2action : List String -> List Action
 location2action list =
     case list of
         first :: rest ->
@@ -565,7 +565,7 @@ have a default action ... perhaps something like this (assuming the
 existence of a `ShowPage` action):
 
 ```elm
-location2action : List String -> List action
+location2action : List String -> List Action
 location2action list = [ShowPage]
 ```
 
@@ -577,14 +577,14 @@ Consider, for instance, the search field example given above. That might
 be implemented like this (again, assuming the relevant actions exist):
 
 ```elm
-location2action : List String -> List action
+location2action : List String -> List Action
 location2action list =
     case list of
         first :: rest ->
             [SetSearchField first]
 
         _ ->
-            []
+            [ShowPage]
 ```
 
 ## <a name="signal-graph">What this module does to the signal graph</a>

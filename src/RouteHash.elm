@@ -12,8 +12,8 @@ browser's location hash. The net effect is to make it possible for the 'back'
 and 'forward' buttons in the browser to do useful things, and for the state of
 your app to be partially bookmark-able.
 
-To use this module, you will need to configure it using the `start` function,
-as described below.
+To use this module, you will need to configure it using the [`start`](#start)
+function, as described below.
 
 There is [additional documentation](https://github.com/rgrempel/elm-route-hash)
 available in the README in the Github repository.
@@ -44,13 +44,13 @@ type HashUpdate
     | ReplacePath (List String)
 
 
-{-| Returns a HashUpdate that will update the browser's location, creating
-a new history entry.
+{-| Returns a [`HashUpdate`](#HashUpdate) that will update the browser's
+location, creating a new history entry.
 
 The `List String` represents the hash portion of the location. Each element of
 the list will be uriEncoded, and then the list will be joined using slashes
-("/"). Finally, a prefix will be applied (by default, "#!/", but it is
-configurable).
+("/"). Finally, a prefix will be applied (by [default](#defaultPrefix), "#!/",
+but it is configurable).
 -}
 set : List String -> HashUpdate
 set = SetPath
@@ -61,14 +61,14 @@ the current history entry.
 
 The `List String` represents the hash portion of the location. Each element of
 the list will be uriEncoded, and then the list will be joined using slashes
-("/"). Finally, a prefix will be applied (by default, "#!/", but it is
-configurable).
+("/"). Finally, a prefix will be applied (by [default](#defaultPrefix), "#!/",
+but it is configurable).
 -}
 replace : List String -> HashUpdate
 replace = ReplacePath
 
 
-{-| Applies the supplied function to the HashUpdate. -}
+{-| Applies the supplied function to the [`HashUpdate`](#HashUpdate). -}
 apply : (List String -> List String) -> HashUpdate -> HashUpdate
 apply func update =
     case update of
@@ -79,10 +79,10 @@ apply func update =
             ReplacePath (func list)
 
 
-{-| Applies the supplied function to the HashUpdate.
+{-| Applies the supplied function to the [`HashUpdate`](#HashUpdate).
 
 You might use this function when dispatching in a modular application.
-For instance, your `delta2update` function might look something like this:
+For instance, your [`delta2update`](#Config) function might look something like this:
 
     delta2update : Model -> Model -> Maybe HashUpdate
     delta2update old new =
@@ -102,7 +102,7 @@ map func update =
     Maybe.map (apply func) update
     
 
-{-| Extracts the `List String` from the HashUpdate. -}
+{-| Extracts the `List String` from the [`HashUpdate`](#HashUpdate). -}
 extract : HashUpdate -> List String
 extract action =
     case action of
@@ -118,21 +118,21 @@ extract action =
 *  `prefix` is the initial characters that should be stripped from the hash (if
     present) when reacting to location changes, and added to the hash when
     generating location changes. Normally, you'll likely want to use
-    `defaultPrefix`, which is "#!/"
+    [`defaultPrefix`](#defaultPrefix), which is "#!/".
 
 *   `models` is your signal of models. This is required so that we can react to
     changes in the model, possibly updating the location.
 
 *   `delta2update` is a function which takes two arguments and possibly
-    returns a `HashUpdate`. The first argument is the previous model.
-    The second argument is the current model.
+    returns a [`HashUpdate`](#HashUpdate). The first argument is the previous
+    model.  The second argument is the current model.
 
     The reason you are provided with both the previous and current models is
     that sometimes the nature of the location update depends on the difference
     between the two, not just on the latest model. For instance, if the user is
-    typing in a form, you might want to use `replace` rather than `set`. Of
-    course, in cases where you only need to consult the current model, you
-    can ignore the first parameter.
+    typing in a form, you might want to use [`replace`](#replace) rather than
+    [`set`](#set). Of course, in cases where you only need to consult the
+    current model, you can ignore the first parameter.
 
     This module will normalize the `List String` in the update in the following
     way before setting the actual location. It will:
@@ -141,12 +141,13 @@ extract action =
     * join them with "/"
     * add the `prefix` to the beginning
 
-    In a modular application, you may well want to use `map` after dispatching
-    to a lower level -- see the example in the `map` documentation.
+    In a modular application, you may well want to use [`map`](#map) after dispatching
+    to a lower level -- see the example in the [`map` documentation](#map).
 
     Note that this module will automatically detect cases where you return
-    a `HashUpdate` which would set the same location that is already set, and
-    do nothing. Thus, you don't need to try to detect that yourself.
+    a [`HashUpdate`](#HashUpdate) which would set the same location that is
+    already set, and do nothing. Thus, you don't need to try to detect that
+    yourself.
 
     The content of the individual strings is up to you ... essentially it
     should be something that your `location2action` function can deal with.
@@ -156,15 +157,15 @@ extract action =
 
     The argument is a normalized version of the hash portion of the location.
     First, the `prefix` is stripped from the hash, and then the result is
-    converted to a `List` by using '/' as a delimiter. Then, each `String`
-    value is uriDecoded.
+    converted to a `List String` by using '/' as a delimiter. Then, each
+    `String` value is uriDecoded.
 
     Essentially, your `location2action` should return actions that are the
     reverse of what your `delta2update` function produced. That is, the
     `List String` you get back in `location2action` is the `List String` that
-    your `delta2path` used to create a `HashUpdate`. So, however you encoded
-    your state in `delta2path`, you now need to interpret that in
-    `location2action` in order to return actions which will produce the
+    your `delta2update` used to create a [`HashUpdate`](#HashUpdate). So,
+    however you encoded your state in `delta2update`, you now need to interpret
+    that in `location2action` in order to return actions which will produce the
     desired state.
 
     Note that the list of actions you return will often be a single action. It
@@ -184,14 +185,14 @@ type alias Config model action =
     }
 
 
-{-| The defaultPrefix that you will most often want to supply as the
-`prefix` in your `Config`. It is equal to "#!/".
+{-| The value that you will most often want to supply as the
+`prefix` in your [`Config`](#Config). It is equal to "#!/".
 -}
 defaultPrefix : String
 defaultPrefix = "#!/"
 
 
-{-| Call this function once with your configuration.
+{-| Call this function once with your [configuration](#Config).
 
 The signal of tasks returned by this function needs to be sent to a port
 to be executed. So, you might call it in your main module something
@@ -207,7 +208,7 @@ like this:
             , location2action = location2action
             }
 
-See `Config` for the documentation of the parameter you need to supply.
+See [`Config`](#Config) for the documentation of the parameter you need to supply.
 -}
 start : Config model action -> Signal (Task () ())
 start config =
