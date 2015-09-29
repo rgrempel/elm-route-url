@@ -181,7 +181,7 @@ It's probably worth explaining how this normalization works.
 When the module sees a change in the location hash, what it sees is a
 string which looks something like this:
 
-    "#!/somedata/following/thehash"
+    "#!/somedata/following/the%20hash"
 
 Now, before this gets supplied to your code, it is normalized to a `List
 String` in the following manner:
