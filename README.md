@@ -7,13 +7,13 @@ package. The module is extracted from an
 
 * [Overview](#overview)
     * [Routing](#routing)
-        * [Mapping location changes to actions](#mapping-location-changes)
-        * [Mapping state changes to location changes](#mapping-state-changes)
-    * [Preventing circularity](#circularity)
+        * [Mapping location changes to actions](#mapping-location-changes-to-actions-our-app-can-perform)
+        * [Mapping state changes to location changes](#mapping-changes-in-the-app-state-to-a-possible-location-change)
+    * [Preventing circularity](#preventing-circularity)
     * [Normalizing location changes](#normalizing-location-changes)
-* [Relationship with other modules](#other-modules)
-    * [elm-router](#elm-router)
-    * [start-app](#start-app)
+* [Relationship with other modules](#relationship-with-other-modules)
+    * [elm-router](#relationship-with-elm-router)
+    * [start-app](#relationship-with-start-app)
 * [API](#api)
     * [Configuration](#configuration)
         * [`start : Config model action -> Signal (Task () ())`](#start)
@@ -23,23 +23,25 @@ package. The module is extracted from an
             * [`delta2update : model -> model -> Maybe HashUpdate`](#delta2update)
             * [`location2action : List String -> List action`](#location2action)
             * [`address : Address action`](#address)
-    * [Helpers for `HashUpdate`](#helpers)
+    * [Helpers for `HashUpdate`](#helpers-for--code-hashupdate--code-)
         * [`set : List String -> HashUpdate`](#set)
         * [`replace : List String -> HashUpdate`](#replace)
         * [`apply : (List String -> List String) -> HashUpdate -> HashUpdate`](#apply)
         * [`map : (List String -> List String) -> Maybe HashUpdate -> Maybe HashUpdate`](#map)
         * [`extract : HashUpdate -> List String`](#extract)
-* [Implementing the API](#implementing)
-    * [Implementing `delta2update`](#implementing-delta2update)
-    * [Implementing `location2action`](#implementing-location2action)
-* [The Signal Graph](#signal-graph)
+* [Implementing the API](#implementing-the-api)
+    * [Implementing `delta2update`](#implementing--code-delta2update--code-)
+    * [Implementing `location2action`](#implementing--code-location2action--code-)
+* [The Signal Graph](#what-this-module-does-to-the-signal-graph)
 
-## <a name="overview">Overview</a>
+
+## Overview
 
 Before turning to the actual API, here's an overview of the thinking behind the
 module.
 
-### <a name="routing">Routing</a>
+
+### Routing
 
 What does "routing" mean? Essentially, there are two things which we want to
 do:
@@ -69,7 +71,8 @@ A few notes in passing:
 
 So, let's think a little more about the two mappings we identified above.
 
-#### <a name="mapping-location-changes">Mapping location changes to actions our app can perform</a>
+
+#### Mapping location changes to actions our app can perform
 
 In effect, what we're looking for here is (conceptually) something like this
 (in pseudo-code):
@@ -101,7 +104,8 @@ usual pattern.  However, if you come across a case in which it would be useful
 to map location changes to a more arbitrary `Task`, we could consider an
 alternate API for that.
 
-#### <a name="mapping-state-changes">Mapping changes in the app state to a possible location change</a>
+
+#### Mapping changes in the app state to a possible location change
 
 Here, what we are looking for (conceptually) is something like this (in
 pseudo-code):
@@ -149,7 +153,8 @@ pick up on that without having to intrude into the `update` function itself.
 So, this approach feels more modular. However, it is by no means the only way
 it could be done.
 
-### <a name="circularity">Preventing circularity</a>
+
+### Preventing circularity
 
 The quick-witted amongst you may have noticed that there is a potential
 circularity in the two things which this module is trying to do -- that is:
@@ -172,7 +177,8 @@ This module deals with the potential circularity in a couple of ways:
     is equal to the last location which we set. If so, we do nothing, since
     there is no need to react to a location change that we initiated.
 
-### <a name="normalizing-location-changes">Normalizing location changes</a>
+
+### Normalizing location changes
 
 This module essentially conceives of a location change as a `List String`
 which it normalizes when transitioning to and from the actual location.
@@ -221,13 +227,15 @@ then the module normalizes it as follows:
 So, that is what the location would ultimately be set to, when you provide
 a `List String` to construct a `HashUpdate`.
 
-## <a name="other-modules"> Relationship with other modules</a>
+
+## Relationship with other modules
 
 Before turning to the API itself, there are a few things you might find
 useful to know about the relationship between elm-route-hash and a few
 other modules.
 
-### <a name="elm-router">Relationship with elm-router</a>
+
+### Relationship with elm-router
 
 There is another Elm module which addresses routing,
 [elm-router](https://github.com/TheSeamau5/elm-router). That module is focused
@@ -263,7 +271,7 @@ supplying the `location2action` function that this module needs. However, you
 don't have to use it -- I'll mention some alternative ways to implement
 `location2action` below.
 
-### <a name="start-app">Relationship with start-app</a>
+### Relationship with start-app
 
 As you'll see in a moment (honestly!), you need to provide a `Signal model`
 and an `Address action` to configure this module -- that is, you need to tell
@@ -292,13 +300,17 @@ to make yourself understand what start-app is doing. So, I suppose I'm
 not too concerned about it, but I will look for opportunities to more
 easily integrate with start-app, if they arise.
 
-## <a name="api">API</a>
+
+## API
 
 See, I promised I would get to the API eventually!
 
-### <a name="configuration">Configuration</a>
 
-To use this module, you need to call the <a name="start">`start`</a> function,
+### Configuration
+
+#### start
+
+To use this module, you need to call the `start` function,
 which looks like this:
 
 ```elm
@@ -321,104 +333,124 @@ port routeTasks =
         }
 ```
 
-You will note that the single parameter is of type 
-<a name="config">`Config`</a>, which is a record type defined as follows:
 
-```elm
-type alias Config model action =
-    { prefix : String
-    , models : Signal model
-    , delta2update : model -> model -> Maybe HashUpdate
-    , location2action : List String -> List action
-    , address : Address action
-    }
-```
+#### Config
+
+You will note that the single parameter is of type 
+`Config`, which is a record type defined as follows:
+
+    type alias Config model action =
+        { prefix : String
+        , models : Signal model
+        , delta2update : model -> model -> Maybe HashUpdate
+        , location2action : List String -> List action
+        , address : Address action
+        }
 
 Here is the significance of each of the fields in the `Config` record.
 
-*   <a name="prefix">`prefix : String`</a>
+##### prefix 
 
-    The initial characters that should be stripped from the hash (if present)
-    when reacting to location changes, and added to the hash when generating
-    location changes. Normally, you'll likely want to use `defaultPrefix`,
-    which is "#!/".
+    prefix : String
 
-*   <a name="models">`models : Signal model`</a>
+The initial characters that should be stripped from the hash (if present)
+when reacting to location changes, and added to the hash when generating
+location changes. Normally, you'll likely want to use `defaultPrefix`,
+which is "#!/".
 
-    Your signal of models. This is required so that we can react to changes in
-    the model, possibly updating the location.
+##### models
 
-*   <a name="delta2update">`delta2update : model -> model -> Maybe HashUpdate`</a>
-  
-    A function which takes two arguments and possibly returns a `HashUpdate`.
-    The first argument is the previous model. The second argument is the current
-    model.
+    models : Signal model
 
-    The reason you are provided with both the previous and current models is
-    that sometimes the nature of the location update depends on the difference
-    between the two, not just on the latest model. For instance, if the user is
-    typing in a form, you might want to use `replace` rather than `set`. Of
-    course, in cases where you only need to consult the current model, you can
-    ignore the first parameter.
+Your signal of models. This is required so that we can react to changes in
+the model, possibly updating the location.
 
-    See [further comments](#implementing-delta2update) on implementing
-    `delta2update` below.
+##### delta2update
 
-*   <a name="location2action">`location2action : List String -> List action`</a>
+    delta2update : model -> model -> Maybe HashUpdate
 
-    A function which takes a `List String` and returns actions your app can
-    perform. 
-   
-    Essentially, your `location2action` should return actions that are the
-    reverse of what your `delta2update` function produced. That is, the `List
-    String` you get back in `location2action` is the `List String` that your
-    `delta2update` used to create a `HashUpdate`. So, however you encoded your
-    state in `delta2update`, you now need to interpret that in `location2action`
-    in order to return actions which will produce the desired state.
+A function which takes two arguments and possibly returns a `HashUpdate`.
+The first argument is the previous model. The second argument is the current
+model.
 
-    See [further comments](#implementing-location2action) on implementing
-    `location2action` below.
+The reason you are provided with both the previous and current models is
+that sometimes the nature of the location update depends on the difference
+between the two, not just on the latest model. For instance, if the user is
+typing in a form, you might want to use `replace` rather than `set`. Of
+course, in cases where you only need to consult the current model, you can
+ignore the first parameter.
 
-*   <a name="address">`address : Address action`</a>
+See [further comments](#implementing-delta2update) on implementing
+`delta2update` below.
 
-    A `Signal.Address` to which the actions returned by `location2action` can
-    be sent.
+##### location2action
 
-### <a name="helpers">Helpers for `HashUpdate`</a>
+    location2action : List String -> List action
+
+A function which takes a `List String` and returns actions your app can
+perform. 
+
+Essentially, your `location2action` should return actions that are the
+reverse of what your `delta2update` function produced. That is, the `List
+String` you get back in `location2action` is the `List String` that your
+`delta2update` used to create a `HashUpdate`. So, however you encoded your
+state in `delta2update`, you now need to interpret that in `location2action`
+in order to return actions which will produce the desired state.
+
+See [further comments](#implementing-location2action) on implementing
+`location2action` below.
+
+##### address
+
+    address : Address action
+
+A `Signal.Address` to which the actions returned by `location2action` can
+be sent.
+
+
+### Helpers for `HashUpdate`
 
 There are a number of functions which exist to help you produce and modify
 `HashUpdate` objects.
 
-*   <a name="set">`set : List String -> HashUpdate`</a>
+#### set
 
-    Returns a `HashUpdate` that will update the browser's location, creating
-    a new history entry.
+    set : List String -> HashUpdate
 
-    The `List String` represents the hash portion of the location. Each element
-    of the list will be uriEncoded, and then the list will be joined using
-    slashes ("/"). Finally, a prefix will be applied (by default, "#!/", but it
-    is configurable).
+Returns a `HashUpdate` that will update the browser's location, creating
+a new history entry.
 
-*   <a name="replace">`replace : List String -> HashUpdate`</a>
+The `List String` represents the hash portion of the location. Each element
+of the list will be uriEncoded, and then the list will be joined using
+slashes ("/"). Finally, a prefix will be applied (by default, "#!/", but it
+is configurable).
 
-    Returns a `HashUpdate` that will update the browser's location, replacing
-    the current history entry.
+#### replace
 
-    The `List String` represents the hash portion of the location. Each element of
-    the list will be uriEncoded, and then the list will be joined using slashes
-    ("/"). Finally, a prefix will be applied (by default, "#!/", but it is
-    configurable).
+    replace : List String -> HashUpdate
 
-*   <a name="apply">`apply : (List String -> List String) -> HashUpdate -> HashUpdate`</a>
+Returns a `HashUpdate` that will update the browser's location, replacing
+the current history entry.
 
-    Applies the supplied function to the `List String` inside the `HashUpdate`.
+The `List String` represents the hash portion of the location. Each element of
+the list will be uriEncoded, and then the list will be joined using slashes
+("/"). Finally, a prefix will be applied (by default, "#!/", but it is
+configurable).
 
-*   <a name="map">`map : (List String -> List String) -> Maybe HashUpdate -> Maybe HashUpdate`</a>
+#### apply
 
-    Applies the supplied function to the `List String` inside the `HashUpdate`.
+    apply : (List String -> List String) -> HashUpdate -> HashUpdate
 
-    You might use this function when dispatching in a modular application.
-    For instance, your `delta2update` function might look something like this:
+Applies the supplied function to the `List String` inside the `HashUpdate`.
+
+#### map
+
+    map : (List String -> List String) -> Maybe HashUpdate -> Maybe HashUpdate
+
+Applies the supplied function to the `List String` inside the `HashUpdate`.
+
+You might use this function when dispatching in a modular application.
+For instance, your `delta2update` function might look something like this:
 
     ```elm
     delta2update : Model -> Model -> Maybe HashUpdate
@@ -431,22 +463,26 @@ There are a number of functions which exist to help you produce and modify
                 RouteHash.map ((::) "page-tag-2") PageModule2.delta2update old new
     ```
 
-    Of course, your model and modules may be set up differently. However you do it,
-    the `map` function allows you to dispatch `delta2update` to a lower-level module,
-    and then modify the `Maybe HashUpdate` which it returns.
+Of course, your model and modules may be set up differently. However you do it,
+the `map` function allows you to dispatch `delta2update` to a lower-level module,
+and then modify the `Maybe HashUpdate` which it returns.
 
-*   <a name="extract">`extract : HashUpdate -> List String`</a>
+#### extract
 
-    Extracts the `List String` from the `HashUpdate`.
+    extract : HashUpdate -> List String
 
-## <a name="implementing">Implementing the API</a>
+Extracts the `List String` from the `HashUpdate`.
+
+
+## Implementing the API
 
 Now, you may have noticed that you basically need to supply two significant
 functions in order to use this module: `delta2update` and `location2action`.
 So, it might be useful to comment a little further on how you might go about
 implementing those functions.
 
-### <a name="implementing-delta2update">Implementing `delta2update`</a>
+
+### Implementing `delta2update`
 
 What you need to do in your `delta2update` function is take your current (and
 previous) state, and derive a `List String` that represents what the location
@@ -519,7 +555,8 @@ Of course, various details about how you handle modularity in your app will
 differ. The essential point is that you need to build up a `HashUpdate` by
 dispatching based on the new (and possibly old, if relevant) models.
 
-### <a name="implementing-location2action">Implementing `location2action`</a>
+
+### Implementing `location2action`
 
 The `List String` you get in your `location2action` function is basically the
 `List String` that you generated when you created a `HashUpdate` in
@@ -587,10 +624,10 @@ location2action list =
             [ShowPage]
 ```
 
-## <a name="signal-graph">What this module does to the signal graph</a>
+## What this module does to the signal graph
 
-You may find it useful to know what `start` does to the signal graph. In these
-matters, a picture is worth a thousand words, so here's a picture.
+You may find it useful to know what [`start`](#start) does to the signal graph.
+In these matters, a picture is worth a thousand words, so here's a picture.
 
 ![Signal graph](https://cdn.rawgit.com/rgrempel/elm-route-hash/master/signals.svg)
 
