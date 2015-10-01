@@ -23,15 +23,15 @@ package. The module is extracted from an
             * [`delta2update : model -> model -> Maybe HashUpdate`](#delta2update)
             * [`location2action : List String -> List action`](#location2action)
             * [`address : Address action`](#address)
-    * [Helpers for `HashUpdate`](#helpers-for--code-hashupdate--code-)
+    * [Helpers for `HashUpdate`](#helpers-for-hashupdate)
         * [`set : List String -> HashUpdate`](#set)
         * [`replace : List String -> HashUpdate`](#replace)
         * [`apply : (List String -> List String) -> HashUpdate -> HashUpdate`](#apply)
         * [`map : (List String -> List String) -> Maybe HashUpdate -> Maybe HashUpdate`](#map)
         * [`extract : HashUpdate -> List String`](#extract)
 * [Implementing the API](#implementing-the-api)
-    * [Implementing `delta2update`](#implementing--code-delta2update--code-)
-    * [Implementing `location2action`](#implementing--code-location2action--code-)
+    * [Implementing `delta2update`](#implementing-delta2update)
+    * [Implementing `location2action`](#implementing-location2action)
 * [The Signal Graph](#what-this-module-does-to-the-signal-graph)
 
 
