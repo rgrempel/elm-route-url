@@ -110,9 +110,7 @@ alternate API for that.
 Here, what we are looking for (conceptually) is something like this (in
 pseudo-code):
 
-```elm
-Signal model -> Signal (Maybe HashUpdate)
-```
+    Signal model -> Signal (Maybe HashUpdate)
 
 That is, when your app's model changes, we want to possibly generate a change
 to the location hash. Now, there are a couple of things worth noting about
@@ -133,9 +131,7 @@ One question you might ask is this: why are changes to the location triggered
 by changes to the model, rather than by actions? That is, might it be better to
 conceive of what we want here as this instead:
 
-```elm
-Signal action -> Signal (Maybe HashUpdate)
-```
+    Signal action -> Signal (Maybe HashUpdate)
 
 In fact, it might be interesting to try that. However, you would, of course, in
 some cases need access to the whole model (not just the action) in order to
@@ -248,17 +244,13 @@ So, if we think about the two conceptual "mappings" that this module is
 interested in, elm-router is relevant to one of them -- that is, to the mapping
 from
 
-```elm
-History.hash -> Signal (List action)
-```
+    History.hash -> Signal (List action)
 
 When we get to the actual API (in a moment, I promise!), you'll see that this
 module asks you for a `location2action` function to help do that. That is, this
 module asks you to provide a function of the form:
 
-```elm
-List String -> List action
-```
+    List String -> List action
 
 So, in principle, you could use elm-router to help with constructing that
 function.  Now, elm-router expects the input to be a `String`, whereas this
@@ -313,25 +305,21 @@ See, I promised I would get to the API eventually!
 To use this module, you need to call the `start` function,
 which looks like this:
 
-```elm
-start : Config model action -> Signal (Task () ())
-```
+    start : Config model action -> Signal (Task () ())
 
 The signal of tasks returned by this function needs to be sent to a port
 to be executed. So, you might call it in your main module something
 like this:
 
-```elm
-port routeTasks : Signal (Task () ())
-port routeTasks =
-    RouteHash.start
-        { prefix = RouteHash.defaultPrefix
-        , models = models
-        , delta2update = delta2update 
-        , address = address
-        , location2action = location2action
-        }
-```
+    port routeTasks : Signal (Task () ())
+    port routeTasks =
+        RouteHash.start
+            { prefix = RouteHash.defaultPrefix
+            , models = models
+            , delta2update = delta2update 
+            , address = address
+            , location2action = location2action
+            }
 
 
 #### Config
@@ -452,7 +440,6 @@ Applies the supplied function to the `List String` inside the `HashUpdate`.
 You might use this function when dispatching in a modular application.
 For instance, your `delta2update` function might look something like this:
 
-    ```elm
     delta2update : Model -> Model -> Maybe HashUpdate
     delta2update old new =
         case new.virtualPage of
@@ -461,7 +448,6 @@ For instance, your `delta2update` function might look something like this:
 
             PageTag2 ->
                 RouteHash.map ((::) "page-tag-2") PageModule2.delta2update old new
-    ```
 
 Of course, your model and modules may be set up differently. However you do it,
 the `map` function allows you to dispatch `delta2update` to a lower-level module,
@@ -510,27 +496,23 @@ the list. That way, the sub-module only has to worry about encoding its own
 state -- the higher-level module will add something that discriminates between
 one sub-module and another. For example:
 
-```elm
-delta2update : Model -> Model -> Maybe HashUpdate
-delta2update old new =
-    case new.virtualPage of
-        PageTag1 ->
-            RouteHash.map ((::) "page-tag-1") PageModule1.delta2update old new
+    delta2update : Model -> Model -> Maybe HashUpdate
+    delta2update old new =
+        case new.virtualPage of
+            PageTag1 ->
+                RouteHash.map ((::) "page-tag-1") PageModule1.delta2update old new
 
-        PageTag2 ->
-            RouteHash.map ((::) "page-tag-2") PageModule2.delta2update old new
-```
+            PageTag2 ->
+                RouteHash.map ((::) "page-tag-2") PageModule2.delta2update old new
 
 Now, what might the sub-module's `delta2update` look like? In some cases, you
 might not actually need to record any state at the sub-module level ... perhaps
 it is sufficient that the super-module will dispatch to the sub-module at all.
 In that case, you might use something like:
 
-```elm
-delta2update : Model -> Model -> Maybe HashUpdate
-delta2update old new =
-    Just <| RouteHash.set []
-```
+    delta2update : Model -> Model -> Maybe HashUpdate
+    delta2update old new =
+        Just <| RouteHash.set []
 
 That is, you might use just an empty list (to which the super-module can then
 prepend something). 
@@ -541,11 +523,9 @@ like the search term to be reflected in the URL, so that the 'forward'
 and 'back' buttons work as expected. You might do something like this
 in the sub-module:
 
-```elm
-delta2update : Model -> Model -> Maybe HashUpdate
-delta2update old new =
-    Just <| RouteHash.replace [new.searchForm.searchField]
-```
+    delta2update : Model -> Model -> Maybe HashUpdate
+    delta2update old new =
+        Just <| RouteHash.replace [new.searchForm.searchField]
 
 Note that you might want to do something different depending on what the
 previous state was (for instance, you might want to switch between using `set`
@@ -573,21 +553,19 @@ Given the example `delta2update` functions above, how might we write the
 equivalent `location2action` functions? For the super-module, it might
 look like this (assuming the existence of the named actions):
 
-```elm
-location2action : List String -> List Action
-location2action list =
-    case list of
-        first :: rest ->
-            case first of
-                "page-tag-1" ->
-                    List.map ShowPage1 (PageModule1.location2action rest)
+    location2action : List String -> List Action
+    location2action list =
+        case list of
+            first :: rest ->
+                case first of
+                    "page-tag-1" ->
+                        List.map ShowPage1 (PageModule1.location2action rest)
 
-                "page-tag-2" ->
-                    List.map ShowPage2 (PageModule2.location2action rest)
+                    "page-tag-2" ->
+                        List.map ShowPage2 (PageModule2.location2action rest)
 
-        _ ->
-            [ShowErrorPage]
-```
+            _ ->
+                [ShowErrorPage]
 
 That is, the super-module might "consume" the first element of the list,
 and dispatch to one submodule or another based on it. Then, after getting
@@ -601,10 +579,8 @@ doesn't really encode anything in `delta2update`, then it would probably
 have a default action ... perhaps something like this (assuming the
 existence of a `ShowPage` action):
 
-```elm
-location2action : List String -> List Action
-location2action list = [ShowPage]
-```
+    location2action : List String -> List Action
+    location2action list = [ShowPage]
 
 In this case, it's enough that the super-module has selected the sub-module ...
 the sub-module always generates the same action.
@@ -613,16 +589,15 @@ Now, suppose the submodule actually has encoded some state in the URL.
 Consider, for instance, the search field example given above. That might
 be implemented like this (again, assuming the relevant actions exist):
 
-```elm
-location2action : List String -> List Action
-location2action list =
-    case list of
-        first :: rest ->
-            [SetSearchField first]
+    location2action : List String -> List Action
+    location2action list =
+        case list of
+            first :: rest ->
+                [SetSearchField first]
 
-        _ ->
-            [ShowPage]
-```
+            _ ->
+                [ShowPage]
+
 
 ## What this module does to the signal graph
 
