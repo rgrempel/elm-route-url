@@ -67,3 +67,12 @@ view address model =
     [ SpinSquare.view (Signal.forwardTo address Left) model.left
     , SpinSquare.view (Signal.forwardTo address Right) model.right
     ]
+
+
+-- We add a separate function to get a title, which the ExampleViewer uses to
+-- construct a table of contents. Sometimes, you might have a function of this
+-- kind return `Html` instead, depending on where it makes sense to do some of
+-- the construction. Or, you could track the title in the higher level module,
+-- if you prefer that.
+title : String
+title = "Pair of spinning squares"

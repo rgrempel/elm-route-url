@@ -10,6 +10,11 @@ import Html.Events exposing (onClick)
 type alias Model = Int
 
 
+-- Added from Main.elm
+init : Model
+init = 0
+
+
 -- UPDATE
 
 type Action = Increment | Decrement
@@ -41,3 +46,11 @@ countStyle =
     , ("width", "50px")
     , ("text-align", "center")
     ]
+
+
+-- We add a separate function to get a title, which the ExampleViewer uses to
+-- construct a table of contents. Sometimes, you might have a function of this
+-- kind return `Html` instead, depending on where it makes sense to do some of
+-- the construction.
+title : String
+title = "Counter"

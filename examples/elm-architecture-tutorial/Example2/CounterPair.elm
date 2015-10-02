@@ -14,10 +14,11 @@ type alias Model =
     }
 
 
-init : Int -> Int -> Model
-init top bottom =
-    { topCounter = Counter.init top
-    , bottomCounter = Counter.init bottom
+-- Rewrote to move initialization from Main.elm
+init : Model
+init =
+    { topCounter = Counter.init 0
+    , bottomCounter = Counter.init 0
     }
 
 
@@ -32,7 +33,7 @@ type Action
 update : Action -> Model -> Model
 update action model =
   case action of
-    Reset -> init 0 0
+    Reset -> init
 
     Top act ->
       { model |
@@ -54,3 +55,11 @@ view address model =
     , Counter.view (Signal.forwardTo address Bottom) model.bottomCounter
     , button [ onClick address Reset ] [ text "RESET" ]
     ]
+
+
+-- We add a separate function to get a title, which the ExampleViewer uses to
+-- construct a table of contents. Sometimes, you might have a function of this
+-- kind return `Html` instead, depending on where it makes sense to do some of
+-- the construction.
+title : String
+title = "Pair of Counters"

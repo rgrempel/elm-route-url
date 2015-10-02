@@ -71,3 +71,12 @@ viewCounter address (id, model) =
           (Signal.forwardTo address (always (Remove id)))
   in
       Counter.viewWithRemoveButton context model
+
+
+-- We add a separate function to get a title, which the ExampleViewer uses to
+-- construct a table of contents. Sometimes, you might have a function of this
+-- kind return `Html` instead, depending on where it makes sense to do some of
+-- the construction. Or, you could track the title in the higher level module,
+-- if you prefer that.
+title : String
+title = "List of Counters (individually removable)"

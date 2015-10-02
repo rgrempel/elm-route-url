@@ -69,3 +69,11 @@ view address model =
 viewCounter : Signal.Address Action -> (ID, Counter.Model) -> Html
 viewCounter address (id, model) =
   Counter.view (Signal.forwardTo address (Modify id)) model
+
+
+-- We add a separate function to get a title, which the ExampleViewer uses to
+-- construct a table of contents. Sometimes, you might have a function of this
+-- kind return `Html` instead, depending on where it makes sense to do some of
+-- the construction.
+title : String
+title = "List of Counters"

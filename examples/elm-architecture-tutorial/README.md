@@ -51,4 +51,17 @@ because they contain just a little bit of code that needs to be accounted for.
 Ultimately, we won't want individual `Main.elm` files, of course.
 
 
+## Create the ExampleViewer
 
+Now, to create a single-page app, we'll need something which is aware of all the
+potential examples, tracks which one we're looking at, and allows some way
+to switch from one to another. Let's call that an `ExampleViewer` ... I've
+implemented it in `ExampleViewer.elm`. To see what it does, it's probably
+best just to look at the code.
+
+This also required some minor changes in the examples themselves.
+
+So, at this stage, we have turned the 8 separate example pages into a single
+page app that allows us to navigate from one example to another by clicking.
+But, we haven't done anything with the URL yet -- the next step is to actually
+hook up elm-route-hash.

@@ -17,10 +17,11 @@ type alias Model =
     }
 
 
-init : String -> (Model, Effects Action)
-init topic =
-  ( Model topic "assets/waiting.gif"
-  , getRandomGif topic
+-- Rewrote to move initialization from Main.elm
+init : (Model, Effects Action)
+init =
+  ( Model "funny cats" "assets/waiting.gif"
+  , getRandomGif "funny cats"
   )
 
 
@@ -98,3 +99,12 @@ randomUrl topic =
 decodeUrl : Json.Decoder String
 decodeUrl =
   Json.at ["data", "image_url"] Json.string
+
+
+-- We add a separate function to get a title, which the ExampleViewer uses to
+-- construct a table of contents. Sometimes, you might have a function of this
+-- kind return `Html` instead, depending on where it makes sense to do some of
+-- the construction. Or, you could track the title in the higher level module,
+-- if you prefer that.
+title : String
+title = "Random Gif"
