@@ -1,4 +1,4 @@
-module Counter (Model, init, Action, update, view) where
+module Example3.Counter (Model, init, Action, update, view) where
 
 import Html exposing (..)
 import Html.Attributes exposing (style)

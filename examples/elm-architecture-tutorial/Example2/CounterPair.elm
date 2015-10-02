@@ -1,6 +1,6 @@
-module CounterPair where
+module Example2.CounterPair where
 
-import Counter
+import Example2.Counter as Counter
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)

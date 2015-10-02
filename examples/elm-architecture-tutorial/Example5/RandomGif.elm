@@ -1,4 +1,4 @@
-module RandomGif where
+module Example5.RandomGif where
 
 import Effects exposing (Effects, Never)
 import Html exposing (..)

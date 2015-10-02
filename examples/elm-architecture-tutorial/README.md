@@ -25,7 +25,7 @@ So, what steps did I follow to do this?
 *   Then, I changed the module declarations in each file to include the
     directory name. For instance, the declaration of `Counter.elm` in the first
     example changes from `module Counter where` to `module Example1.Counter
-    where`.
+    where`. I made the equivalent changes to the existing `import` statements.
 
 *   Then I removed the `README.md` and `elm-package.json` files
     from each example folder. They aren't necessary any longer, since all the

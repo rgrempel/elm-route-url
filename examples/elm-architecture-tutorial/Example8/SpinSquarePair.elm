@@ -1,9 +1,9 @@
-module SpinSquarePair where
+module Example8.SpinSquarePair where
 
 import Effects exposing (Effects)
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import SpinSquare
+import Example8.SpinSquare as SpinSquare
 
 
 -- MODEL

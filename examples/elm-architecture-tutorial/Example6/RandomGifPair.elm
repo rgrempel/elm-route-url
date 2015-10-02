@@ -1,10 +1,10 @@
-module RandomGifPair where
+module Example6.RandomGifPair where
 
 import Effects exposing (Effects)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 
-import RandomGif
+import Example6.RandomGif as RandomGif
 
 
 -- MODEL

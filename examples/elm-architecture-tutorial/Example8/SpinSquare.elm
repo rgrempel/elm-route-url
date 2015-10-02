@@ -1,4 +1,4 @@
-module SpinSquare (Model, Action, init, update, view) where
+module Example8.SpinSquare (Model, Action, init, update, view) where
 
 import Easing exposing (ease, easeOutBounce, float)
 import Effects exposing (Effects)

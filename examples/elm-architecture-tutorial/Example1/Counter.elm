@@ -1,4 +1,4 @@
-module Counter where
+module Example1.Counter where
 
 import Html exposing (..)
 import Html.Attributes exposing (style)

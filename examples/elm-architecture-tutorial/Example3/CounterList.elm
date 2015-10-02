@@ -1,6 +1,6 @@
-module CounterList where
+module Example3.CounterList where
 
-import Counter
+import Example3.Counter as Counter
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
