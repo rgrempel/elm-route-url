@@ -1,4 +1,4 @@
-module CounterList where
+module Example4.CounterList where
 
 import Example4.Counter as Counter
 import Html exposing (..)
