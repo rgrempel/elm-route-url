@@ -31,6 +31,11 @@ So, what steps did I follow to do this?
     from each example folder. They aren't necessary any longer, since all the
     examples will now be on a single page.
 
+*   I copied `StartApp.elm` from
+    [evancz/start-app](https://github.com/evancz/start-app.git), because it
+    will be necessary to make a small modification to it in order to use it
+    with elm-route-hash.
+
 *   I created an `elm-package.json` file at the root of the project.
 
 *   I moved the `assets` directory from each example folder to the root of the
