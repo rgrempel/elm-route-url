@@ -165,13 +165,16 @@ see the problem.
 This module deals with the potential circularity in a couple of ways:
 
 *   Before we actually change the location, we check to see whether the new
-    location is actually equal to the current location. If so, we do nothing,
+    location is equal to the current location. If so, we do nothing,
     since changing the location would be a no-op (and yet would trigger an
     unwanted reaction).
 
 *   Before we react to a location change, we check to see if the new location
     is equal to the last location which we set. If so, we do nothing, since
     there is no need to react to a location change that we initiated.
+
+*   While we are performing actions in response to a location change, we
+    disable the detection of model changes.
 
 
 ### Normalizing location changes
@@ -384,6 +387,11 @@ String` you get back in `location2action` is the `List String` that your
 `delta2update` used to create a `HashUpdate`. So, however you encoded your
 state in `delta2update`, you now need to interpret that in `location2action`
 in order to return actions which will produce the desired state.
+
+Note that we disable `delta2update` while we perform the actions that you
+return from `location2action`. This helps prevent infinite loops -- you
+don't have to worry that your actions will trigger further location changes,
+thus triggering further actions ...
 
 See [further comments](#implementing-location2action) on implementing
 `location2action` below.

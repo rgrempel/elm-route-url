@@ -30,7 +30,7 @@ available in the README in the Github repository.
 
 import String exposing (uncons, split)
 import Http exposing (uriDecode, uriEncode)
-import Signal exposing (Signal, Address, send, merge)
+import Signal exposing (Signal, Address, Mailbox, mailbox, send, merge, sampleOn)
 import Signal.Extra exposing (passiveMap2, deltas)
 import Task exposing (Task)
 import History
@@ -221,6 +221,39 @@ start config =
             deltas config.models
 
 
+        -- A mailbox which tracks whether we are in the middle of sending a list
+        -- of actions, because of location2action. If we're in the middle, then
+        -- we don't want to consider changes ... we only want to consider the
+        -- change after all the actions are done.
+        --
+        -- processingActions : Mailbox Bool
+        processingActions =
+            mailbox False
+
+        
+        -- A signal of changes that were initiated externally, that is, not by
+        -- sending actions produced by locattion2action.
+        --
+        -- When processingActions flips from False -> True, then we output
+        -- Nothing.
+        --
+        -- When processingActions flips from True -> False, we won't output
+        -- anything until the *next* change, because we're using sampleOn.
+        --
+        -- So, essentially this completely disables `delta2update` while the
+        -- actions returned by `location2action` are running.
+        --
+        -- externalChanges : Signal (Maybe (model, model))
+        externalChanges =
+            Signal.Extra.zip changes processingActions.signal |>
+                sampleOn changes |>
+                    Signal.map (\zipped ->
+                        if snd zipped
+                            then Nothing
+                            else Just (fst zipped)
+                    )
+
+
         -- A signal of the hash in the location bar, but normalized to a List
         -- String.
         -- 
@@ -232,9 +265,17 @@ start config =
         -- Given each change, what update would we make to the location?
         --  
         -- updates : Signal (Maybe HashUpdate)
-        updates =
-            Signal.map (uncurry config.delta2update) changes
+        possibleUpdates =
+            Signal.map computeUpdate externalChanges
     
+       
+        -- Given a possible change, run delta2update if it's a Just.
+        -- Otherwise, return Nothing
+        --
+        -- computeUpdate : Maybe (model, model) -> Maybe HashUpdate
+        computeUpdate maybeChange =
+            maybeChange `Maybe.andThen` (uncurry config.delta2update)
+
 
         -- A signal of the updates, filtering out those which wouldn't
         -- actually change the current location.
@@ -249,7 +290,7 @@ start config =
             -- change.  The other thing which helps avoid this is that we
             -- check, via dropIfCurrent, whether we're **actually** changing
             -- the location.
-            passiveMap2 dropIfCurrent updates locations
+            passiveMap2 dropIfCurrent possibleUpdates locations
 
 
         -- A Signal of Tasks that actually update the location.
@@ -305,16 +346,15 @@ start config =
                 [] ->
                     Nothing
 
-                [action] ->
-                    Just <|
-                        Signal.send config.address action
-                
                 _ ->
                     Just <|
                         Task.map (always ()) <|
                             Task.sequence <|
+                                [ Signal.send processingActions.address True ]
+                                ++
                                 List.map (Signal.send config.address) actions  
-
+                                ++
+                                [ Signal.send processingActions.address False ]
 
     in
         Signal.merge actionTasks updateTasks

@@ -13,11 +13,24 @@ digraph "signals" {
         , style = "bold"
         ];
 
+    module_processing_actions
+        [ label = "processingActions :\nMailbox Bool"
+        , shape = "octagon"
+        ];
+
     module_changes
         [ label = "changes :\nSignal (model, model)"
         ];
 
+    { rank=same; module_changes module_processing_actions }
+
+    module_external_changes
+        [ label = "externalChanges :\nSignal (Maybe (model, model))"
+        ];
+
     config_models -> module_changes
+
+    module_changes -> module_external_changes
 
     history_hash
         [ label = "History.hash :\nSignal String"
@@ -37,7 +50,7 @@ digraph "signals" {
         [ label = "possibleUpdates :\nSignal (Maybe HashUpdate)"
         ];
 
-    module_changes -> module_possible_updates
+    module_external_changes -> module_possible_updates
         [ label = "  config.delta2update"
         , style = "bold"
         ];
@@ -73,6 +86,14 @@ digraph "signals" {
 
     module_action_tasks
         [ label = "actionTasks :\nSignal (Task () ())"
+        ];
+
+    module_action_tasks -> module_processing_actions
+        [ style = "dotted"
+        ]; 
+    
+    module_processing_actions -> module_external_changes
+        [ style = "dashed"
         ];
 
     module_actions -> module_action_tasks
