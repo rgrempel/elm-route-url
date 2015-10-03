@@ -65,3 +65,37 @@ So, at this stage, we have turned the 8 separate example pages into a single
 page app that allows us to navigate from one example to another by clicking.
 But, we haven't done anything with the URL yet -- the next step is to actually
 hook up elm-route-hash.
+
+
+## Basic use of elm-route-hash
+
+So, the next step is to do a basic implementation of elm-route-hash. What
+does this involve?
+
+*   Our `ExampleViewer.elm` needs to implement `delta2update` and
+    `location2action`.
+
+*   Our `Main.elm` needs to call `RouteHash.start`
+
+*   We need to make a small modification to start-app, to expose the
+    `Address` to which we can send actions.
+
+To see how I did this, the best thing is to read the code.
+
+So, what do we have now?
+
+*   Try navigating with the links to each example (like we could do
+    at the previous stage). Notice how the URL in the location bar
+    changes.
+
+*   After navigating with the links, try using the 'forward' and
+    'back' buttons -- see what they do.
+
+*   Navigate to an example, and then hit 'Reload' in the browser
+    -- see if something good happens.
+
+*   Try bookmarking one of the examples. Navigate somewhere else,
+    and then activate the bookmark.
+
+Isn't this fun? And it wasn't really that hard to do.
+

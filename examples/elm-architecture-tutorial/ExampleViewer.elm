@@ -5,6 +5,7 @@ import Html exposing (Html, div, p, text, table, tr, td)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
 import Signal exposing (forwardTo)
+import RouteHash exposing (HashUpdate)
 
 
 -- Note that the way we handle modularity here is a little more verbose than
@@ -283,4 +284,72 @@ view address model =
             ]
                     
 
+-- Routing
 
+-- So, the main thing we'll do here to start with is modify the hash to
+-- indicate which example we're currently looking at. Note that we don't have
+-- to check whether it has changed, because the elm-route-hash module will
+-- check for that. So, in this case, we don't care about the previous value.
+-- And, we can always return a HashUpdate, since it will only actually be
+-- set when it changes.
+delta2update : Model -> Model -> Maybe HashUpdate
+delta2update previous current =
+    Just <|
+        case current.currentExample of
+            Example1 ->
+                RouteHash.set ["example-1"]
+
+            Example2 ->
+                RouteHash.set ["example-2"]
+
+            Example3 ->
+                RouteHash.set ["example-3"]
+
+            Example4 ->
+                RouteHash.set ["example-4"]
+
+            Example5 ->
+                RouteHash.set ["example-5"]
+
+            Example6 ->
+                RouteHash.set ["example-6"]
+
+            Example7 ->
+                RouteHash.set ["example-7"]
+
+            Example8 ->
+                RouteHash.set ["example-8"]
+
+
+-- Here, we basically do the reverse of what delta2update does
+location2action : List String -> List Action
+location2action list =
+    case list of
+        "example-1" :: _ ->
+            [ ShowExample Example1 ]
+        
+        "example-2" :: _ ->
+            [ ShowExample Example2 ]
+
+        "example-3" :: _ ->
+            [ ShowExample Example3 ]
+
+        "example-4" :: _ ->
+            [ ShowExample Example4 ]
+
+        "example-5" :: _ ->
+            [ ShowExample Example5 ]
+
+        "example-6" :: _ ->
+            [ ShowExample Example6 ]
+
+        "example-7" :: _ ->
+            [ ShowExample Example7 ]
+
+        "example-8" :: _ ->
+            [ ShowExample Example8 ]
+
+        _ ->
+            -- Normally, you'd want to show an error of some kind here.
+            -- But, for the moment, I'll just default to example1
+            [ ShowExample Example1 ]
