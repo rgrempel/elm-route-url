@@ -4,6 +4,9 @@ import Example4.Counter as Counter
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import RouteHash exposing (HashUpdate)
+import Result.Extra
+import String
 
 
 -- MODEL
@@ -25,10 +28,12 @@ init =
 
 -- UPDATE
 
+-- Add an action for the advanced example to set our state from a `list int`
 type Action
     = Insert
     | Remove ID
     | Modify ID Counter.Action
+    | Set (List Int)
 
 
 update : Action -> Model -> Model
@@ -52,6 +57,18 @@ update action model =
                 else (counterID, counterModel)
       in
           { model | counters <- List.map updateCounter model.counters }
+
+    Set list ->
+        let
+            counters =
+                List.indexedMap (\index item ->
+                    (index, Counter.init item)
+                ) list
+
+        in
+            { counters = counters
+            , nextID = List.length counters
+            }
 
 
 -- VIEW
@@ -80,3 +97,35 @@ viewCounter address (id, model) =
 -- if you prefer that.
 title : String
 title = "List of Counters (individually removable)"
+
+
+-- Routing
+
+-- You could do this in a variety of ways. We'll ignore the ID's, and just
+-- encode the value of each Counter in the list -- so we'll end up with
+-- something like /0/1/5 or whatever. When we recreate that, we won't
+-- necessarily have the same IDs, but that doesn't matter for this example. 
+-- If it mattered, we'd have to do this a different way.
+delta2update : Model -> Model -> Maybe HashUpdate
+delta2update previous current =
+    -- We'll take advantage of the fact that we know that the counter
+    -- is just an Int ... no need to be super-modular here.
+    List.map (toString << snd) current.counters
+        |> RouteHash.set
+        |> Just
+
+
+location2action : List String -> List Action
+location2action list =
+    let
+        result =
+            List.map String.toInt list
+                |> Result.Extra.combine
+
+    in
+        case result of
+            Ok ints ->
+                [ Set ints ]
+
+            Err _ ->
+                []

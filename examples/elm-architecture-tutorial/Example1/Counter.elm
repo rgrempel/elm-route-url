@@ -3,6 +3,8 @@ module Example1.Counter where
 import Html exposing (..)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
+import RouteHash exposing (HashUpdate)
+import String exposing (toInt)
 
 
 -- MODEL
@@ -17,13 +19,20 @@ init = 0
 
 -- UPDATE
 
-type Action = Increment | Decrement
+-- We add a Set action for the advanced example, so that we
+-- can restore a particular bookmarked state.
+type Action
+    = Increment
+    | Decrement
+    | Set Int
+
 
 update : Action -> Model -> Model
 update action model =
   case action of
     Increment -> model + 1
     Decrement -> model - 1
+    Set value -> value
 
 
 -- VIEW
@@ -54,3 +63,31 @@ countStyle =
 -- the construction.
 title : String
 title = "Counter"
+
+
+-- Routing
+
+-- For delta2update, we provide our state as the value for the URL
+delta2update : Model -> Model -> Maybe HashUpdate
+delta2update previous current =
+    Just <|
+        RouteHash.set [toString current]
+
+
+-- For location2action, we generate an action that will restore our state
+location2action : List String -> List Action
+location2action list =
+    case list of
+        first :: rest ->
+            case toInt first of
+                Ok value ->
+                    [ Set value ]
+
+                Err _ ->
+                    -- If it wasn't an integer, then no action ... we could
+                    -- show an error instead, of course.
+                    []
+
+        _ ->
+            -- If nothing provided for this part of the URL, return empty list 
+            []

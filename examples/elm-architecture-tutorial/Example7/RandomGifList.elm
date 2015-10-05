@@ -5,6 +5,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode as Json
+import RouteHash exposing (HashUpdate)
 
 import Example7.RandomGif as RandomGif
 
@@ -27,10 +28,13 @@ init =
 
 -- UPDATE
 
+-- Add an action for the advanced example to set our state from a list
+-- of topics and gifUrls
 type Action
     = Topic String
     | Create
     | SubMsg Int RandomGif.Action
+    | Set (List (String, Maybe String))
 
 
 update : Action -> Model -> (Model, Effects Action)
@@ -44,7 +48,7 @@ update message model =
         Create ->
             let
                 (newRandomGif, fx) =
-                    RandomGif.init model.topic
+                    RandomGif.init model.topic Nothing
 
                 newModel =
                     Model "" (model.gifList ++ [(model.uid, newRandomGif)]) (model.uid + 1)
@@ -73,6 +77,33 @@ update message model =
             in
                 ( { model | gifList <- newGifList }
                 , batch fxList
+                )
+
+        Set list ->
+            let
+                inits =
+                    list |>
+                        List.map (\(topic, url) ->
+                            RandomGif.init topic url
+                        )
+
+                modelsAndEffects =
+                    inits |>
+                        List.indexedMap (\index item ->
+                            ( (index, fst item)
+                            , Effects.map (SubMsg index) (snd item)
+                            )
+                        )
+
+                (models, effects) =
+                    List.unzip modelsAndEffects
+
+            in
+                ( { model
+                        | gifList <- models
+                        , uid <- List.length models
+                  }
+                , batch effects
                 )
 
 
@@ -132,3 +163,45 @@ is13 code =
 -- if you prefer that.
 title : String
 title = "List of Random Gifs"
+
+
+-- Routing
+
+-- We record each thing in the gifList. Note that we don't track the ID's,
+-- since in this app there isn't any need to preserve them ... of course, we
+-- could track them if it mattered.
+delta2update : Model -> Model -> Maybe HashUpdate
+delta2update previous current =
+    current.gifList 
+        |> List.filterMap (snd >> RandomGif.encodeLocation)
+        |> List.concat
+        |> RouteHash.set
+        |> Just
+
+
+location2action : List String -> List Action
+location2action list =
+    [ Set <|
+        List.map (\(topic, url) ->
+            if url == ""
+                then (topic, Nothing)
+                else (topic, Just url)
+        )
+        (inTwos list)
+    ]
+
+
+inTwos : List a -> List (a, a)
+inTwos list =
+    let 
+        step sublist result =
+            case sublist of
+                a :: b :: rest ->
+                    step rest ((a, b) :: result)
+
+                _ ->
+                    result
+
+    in
+        List.reverse <|
+            step list []

@@ -11,16 +11,24 @@ import Task
 
 -- MODEL
 
+-- In the advanced example, it's easier to track the gifUrl as a Maybe String
+-- and apply the default value later, since the default value is really a
+-- question for the view, rather than the model.
 type alias Model =
     { topic : String
-    , gifUrl : String
+    , gifUrl : Maybe String
     }
 
 
-init : String -> (Model, Effects Action)
-init topic =
-  ( Model topic "assets/waiting.gif"
-  , getRandomGif topic
+-- We provide for initializing with the gifUrl already set, since that is how
+-- the routing will do it. If the gifUrl is provided, then we skip getting a
+-- random one.
+init : String -> Maybe String -> (Model, Effects Action)
+init topic gifUrl =
+  ( Model topic gifUrl
+  , if gifUrl == Nothing
+        then getRandomGif topic
+        else Effects.none
   )
 
 
@@ -38,7 +46,7 @@ update action model =
       (model, getRandomGif model.topic)
 
     NewGif maybeUrl ->
-      ( Model model.topic (Maybe.withDefault model.gifUrl maybeUrl)
+      ( Model model.topic (Maybe.oneOf [maybeUrl, model.gifUrl])
       , Effects.none
       )
 
@@ -52,7 +60,7 @@ view : Signal.Address Action -> Model -> Html
 view address model =
   div [ style [ "width" => "200px" ] ]
     [ h2 [headerStyle] [text model.topic]
-    , div [imgStyle model.gifUrl] []
+    , div [imgStyle (Maybe.withDefault "assets/waiting.gif" model.gifUrl)] []
     , button [ onClick address RequestMore ] [ text "More Please!" ]
     ]
 
@@ -98,3 +106,21 @@ randomUrl topic =
 decodeUrl : Json.Decoder String
 decodeUrl =
   Json.at ["data", "image_url"] Json.string
+
+
+-- Routing
+
+-- Instead of using the same signature all the way down, we'll simplify this
+-- case a little.
+encodeLocation : Model -> Maybe (List String)
+encodeLocation model =
+    -- Don't encode if there's no gifUrl
+    if (model.gifUrl == Nothing)
+        then
+            Nothing
+        
+        else
+            Just
+                [ model.topic
+                , Maybe.withDefault "" model.gifUrl
+                ]

@@ -4,6 +4,7 @@ import Example2.Counter as Counter
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import RouteHash exposing (HashUpdate)
 
 
 -- MODEL
@@ -63,3 +64,35 @@ view address model =
 -- the construction.
 title : String
 title = "Pair of Counters"
+
+
+-- Routing
+
+-- To encode state in the URL, we'll just delegate & concatenate
+-- This will produce partial URLs like /6/7
+delta2update : Model -> Model -> Maybe HashUpdate
+delta2update previous current =
+    -- The implementation is not especially elegant ... perhaps
+    -- we need a few more HashUpdate helpers, to help combining them?
+    [ Counter.delta2update previous.topCounter current.topCounter
+    , Counter.delta2update previous.bottomCounter current.bottomCounter
+    ] 
+        |> List.map (Maybe.withDefault [] << Maybe.map RouteHash.extract)
+        |> List.concat
+        |> RouteHash.set
+        |> Just
+
+
+location2action : List String -> List Action
+location2action list =
+    case list of
+        -- We're expecting two things that we can delegate down ...
+        top :: bottom :: rest ->
+            List.concat
+                [ List.map Top <| Counter.location2action [top]
+                , List.map Bottom <| Counter.location2action [bottom]
+                ]
+
+        -- If we don't have what we expect, then no actions
+        _ ->
+            []

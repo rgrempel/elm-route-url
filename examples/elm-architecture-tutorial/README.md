@@ -99,3 +99,23 @@ So, what do we have now?
 
 Isn't this fun? And it wasn't really that hard to do.
 
+
+## Advanced use of elm-route-hash
+
+A more advanced use of elm-route-hash might dive down into a second (or
+further) layer of the app, so that it's not just the current example
+that's tracked in the URL, but some additional state at the lower level.
+
+How much of this you want to do is entirely up to you. Generally speaking, you
+should only track "view model" state in the URL -- that is, state which affects
+how the data appears to the user, rather than state which is part of the
+fundamental, permanent data of your app. Otherwise, the back and forward
+buttons, bookmarks, etc., will do unexpected things.  I suppose the distinction
+here is like the distinction between "GET" requests and "POST" or "PUT"
+requests in HTTP. Changing the URL is analogous to a "GET" request, and thus
+should not change fundamental state -- it should only change state that affects
+something about which part of the app the user is viewing at the moment.
+
+So, depending on how you conceive of that, there isn't necessarily a lot more
+in the examples that really qualifies as "view model" state. But, I will
+illustrate how to do multiple layers of state anyway, just so you can see how.

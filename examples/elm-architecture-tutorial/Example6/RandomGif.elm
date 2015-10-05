@@ -7,41 +7,79 @@ import Html.Events exposing (onClick)
 import Http
 import Json.Decode as Json
 import Task
+import RouteHash exposing (HashUpdate)
 
 
 -- MODEL
 
+-- For the advanced example, we need to keep track of a status in order to deal
+-- with the fact that a request for a random gif may be in progress when our
+-- location changes. In that case, we want (in effect) to cancel the request.
 type alias Model =
     { topic : String
     , gifUrl : String
+    , requestStatus : RequestStatus
     }
 
 
+-- Tracks whether we should use or ignore the response from getRandomGif
+type RequestStatus
+    = Use 
+    | Ignore
+
+
+-- We start the requestStatus as Use so that we will use the response to the
+-- initial request we issue here.
 init : String -> (Model, Effects Action)
 init topic =
-  ( Model topic "assets/waiting.gif"
+  ( Model topic "assets/waiting.gif" Use
   , getRandomGif topic
   )
 
 
 -- UPDATE
 
+-- We end up needing a separate action for setting the gif from the location,
+-- because in that case we also need to "cancel" any outstanding requests for a
+-- random gif.
 type Action
     = RequestMore
     | NewGif (Maybe String)
+    | NewGifFromLocation String
 
 
 update : Action -> Model -> (Model, Effects Action)
 update action model =
   case action of
     RequestMore ->
-      (model, getRandomGif model.topic)
-
-    NewGif maybeUrl ->
-      ( Model model.topic (Maybe.withDefault model.gifUrl maybeUrl)
-      , Effects.none
+      -- When we're explicitly asked to get a random gif, then mark that
+      -- we should use the response.
+      ( { model | requestStatus <- Use }
+      , getRandomGif model.topic
       )
 
+    NewGif maybeUrl ->
+        case model.requestStatus of
+            Use ->
+                ( { model | gifUrl <- Maybe.withDefault model.gifUrl maybeUrl }
+                , Effects.none
+                )
+
+            -- This will be set to ignore if our location has changed since
+            -- the request was issued. In that case, we want to ignore the
+            -- result of the randomGif request (which was, of course, async)
+            Ignore ->
+                ( model, Effects.none )
+
+    NewGifFromLocation url ->
+        -- When we get the gif from the URL, then ignore any randomGif requests
+        -- that haven't resolved yet.
+        ( { model
+                | gifUrl <- url
+                , requestStatus <- Ignore
+          }
+        , Effects.none
+        )
 
 -- VIEW
 
@@ -98,3 +136,32 @@ randomUrl topic =
 decodeUrl : Json.Decoder String
 decodeUrl =
   Json.at ["data", "image_url"] Json.string
+
+
+-- Routing
+
+-- We'll generate URLs like "/gifUrl". Note that this treats the topic as an
+-- invariant, which it is here ... it can only be supplied on initialization.
+-- If it weren't invariant, we'd need to do something more complex.
+delta2update : Model -> Model -> Maybe HashUpdate
+delta2update previous current =
+    if current.gifUrl == "assets/waiting.gif" 
+        then
+            -- If we're waiting for the first random gif, don't generate an entry ...
+            -- wait for the gif to arrive.
+            Nothing
+
+        else
+            Just (RouteHash.set [current.gifUrl])
+
+
+location2action : List String -> List Action
+location2action list =
+    case list of
+        -- If we have a gifUrl, then use it
+        gifUrl :: rest ->
+            [ NewGifFromLocation gifUrl ]
+
+        -- Otherwise, do nothing
+        _ ->
+            []

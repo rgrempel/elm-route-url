@@ -1,4 +1,4 @@
-module Example8.SpinSquare (Model, Action, init, update, view) where
+module Example8.SpinSquare (Model, Action, init, update, view, delta2update, location2action) where
 
 import Easing exposing (ease, easeOutBounce, float)
 import Effects exposing (Effects)
@@ -7,6 +7,8 @@ import Svg exposing (svg, rect, g, text, text')
 import Svg.Attributes exposing (..)
 import Svg.Events exposing (onClick)
 import Time exposing (Time, second)
+import RouteHash exposing (HashUpdate)
+import String
 
 
 -- MODEL
@@ -34,9 +36,11 @@ duration = second
 
 -- UPDATE
 
+-- For the advanced example, allow setting the angle directly
 type Action
     = Spin
     | Tick Time
+    | SetAngle Float
 
 
 update : Action -> Model -> (Model, Effects Action)
@@ -72,6 +76,13 @@ update msg model =
             }
           , Effects.tick Tick
           )
+
+    SetAngle angle ->
+        ( { angle = angle
+          , animationState = Nothing
+          }
+        , Effects.none
+        )
 
 
 -- VIEW
@@ -110,3 +121,25 @@ view address model =
           , text' [ fill "white", textAnchor "middle" ] [ text "Click me!" ]
           ]
       ]
+
+
+-- Routing
+
+-- Again, we don't necessarily need to use the same signature always ...
+delta2update : Model -> Maybe String
+delta2update current =
+    -- We only want to update if our animation state is Nothing
+    if current.animationState == Nothing
+        then
+            Just <|
+                toString current.angle
+
+        else
+            Nothing
+
+
+location2action : String -> Maybe Action
+location2action location =
+    Maybe.map SetAngle <|
+        Result.toMaybe <|
+            String.toFloat location
