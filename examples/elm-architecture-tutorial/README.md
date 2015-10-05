@@ -142,3 +142,5 @@ So, what do we have now? Here's the [live page](http://rgrempel.github.io/elm-ro
 
 *   Try playing with the other examples. I've hooked up most of the state
     with the URL -- it's actually a bit more than I might do in a real app.
+
+So, I hope that helps get you started.
