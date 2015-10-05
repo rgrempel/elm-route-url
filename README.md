@@ -33,6 +33,7 @@ package. The module is extracted from an
     * [Implementing `delta2update`](#implementing-delta2update)
     * [Implementing `location2action`](#implementing-location2action)
 * [The Signal Graph](#what-this-module-does-to-the-signal-graph)
+* [Example Code](#example-code)
 
 
 ## Overview
@@ -615,3 +616,15 @@ In these matters, a picture is worth a thousand words, so here's a picture.
 ![Signal graph](https://cdn.rawgit.com/rgrempel/elm-route-hash/master/signals.svg)
 
 
+## Example Code
+
+In order to illustrate how to use elm-route-hash, I though it might be useful
+to take some familiar code and show how to turn it into a single-page app with
+bookmarkable URLs and a working "forward" and "back" button.
+
+What code could be more familiar than the
+[Elm Architecture Tutorial](https://github.com/evancz/elm-architecture-tutorial)?
+And, the tutorial consists of 8 examples which are each separate pages. So, why
+not show how to turn those 8 examples into a single page?
+
+Here's a [link to the example](https://github.com/rgrempel/elm-route-hash/tree/master/examples/elm-architecture-tutorial).

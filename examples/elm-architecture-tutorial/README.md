@@ -50,6 +50,9 @@ Note that I hadn't yet removed the individual `Main.elm` files from each example
 because they contain just a little bit of code that needs to be accounted for.
 Ultimately, we won't want individual `Main.elm` files, of course.
 
+If you'd like to see the code at this stage,
+[here's a link](https://github.com/rgrempel/elm-route-hash/tree/6832fd459db204a4acea8820d6dcfc40b6cbe86f/examples/elm-architecture-tutorial)
+
 
 ## Create the ExampleViewer
 
@@ -61,8 +64,13 @@ best just to look at the code.
 
 This also required some minor changes in the examples themselves.
 
+Here's a link to the [commit that made the changes](https://github.com/rgrempel/elm-route-hash/commit/cc69752e3622442d245ec8af2868bacf7a24c948)
+
 So, at this stage, we have turned the 8 separate example pages into a single
 page app that allows us to navigate from one example to another by clicking.
+If you'd like to try out what it was like at this point,
+[here's a live page](http://rgrempel.github.io/elm-route-hash/examples/elm-architecture-tutorial/spa.html)
+
 But, we haven't done anything with the URL yet -- the next step is to actually
 hook up elm-route-hash.
 
@@ -80,9 +88,12 @@ does this involve?
 *   We need to make a small modification to start-app, to expose the
     `Address` to which we can send actions.
 
-To see how I did this, the best thing is to read the code.
+To see how I did this, the best thing is to read the code. Here's a [link
+to the commit that made the changes](https://github.com/rgrempel/elm-route-hash/commit/77228f25de1e05f419839ed9f63a51e046f84493).
+Note that this includes the small change you need to make to start-app,
+if you're using that.
 
-So, what do we have now?
+So, what do we have now? Here's the [live page](http://rgrempel.github.io/elm-route-hash/examples/elm-architecture-tutorial/basic.html).
 
 *   Try navigating with the links to each example (like we could do
     at the previous stage). Notice how the URL in the location bar
@@ -119,3 +130,15 @@ something about which part of the app the user is viewing at the moment.
 So, depending on how you conceive of that, there isn't necessarily a lot more
 in the examples that really qualifies as "view model" state. But, I will
 illustrate how to do multiple layers of state anyway, just so you can see how.
+
+Here's a [link to the commit that made these changes](https://github.com/rgrempel/elm-route-hash/commit/b07334fea92214e877b953992a88df428d201013).
+
+So, what do we have now? Here's the [live page](http://rgrempel.github.io/elm-route-hash/examples/elm-architecture-tutorial/advanced.html).
+
+*   Try incrementing an decrementing a counter in Example 1. Look at how the
+    URL changes. Try the forward and back buttons. Try bookmarking and
+    activating a bookmark. Try reloading a page. In the previous example,
+    the examples would reset, whereas now they should maintain state.
+
+*   Try playing with the other examples. I've hooked up most of the state
+    with the URL -- it's actually a bit more than I might do in a real app.
