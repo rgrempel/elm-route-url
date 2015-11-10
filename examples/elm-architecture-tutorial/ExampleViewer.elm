@@ -111,11 +111,15 @@ type Action
     | Example7Action Example7.Action
     | Example8Action Example8.Action
     | ShowExample Example 
+    | NoOp
 
 
 update : Action -> Model -> (Model, Effects Action)
 update action model =
     case action of
+        NoOp ->
+            ( model, Effects.none )
+
         ShowExample example ->
             ( { model | currentExample <- example }
             , Effects.none

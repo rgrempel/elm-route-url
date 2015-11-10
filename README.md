@@ -282,19 +282,58 @@ supply it to this module.
 
 Now, start-app does allow you to provide a `List (Signal Action)` to its
 `start` function, which in principle we could use to feed actions into the app.
-However, that approach would lead to a chicken-and-egg problem. In order to
+However, that approach seems to have a chicken-and-egg problem. In order to
 create the `Signal action`, we need the `Signal model` as an input.  However,
 we can only get the `Signal model` from start-app as a **result** of running
 start-app's `start` function. So, we need the results of `StartApp.start`
 before we call it, which is tough to arrange.
 
-So, if you're using start-app, and you want to use elm-route-hash as well,
-you'll need to make a local copy of start-app's code and modify it so that
-the `Address action` is exposed. This isn't especially difficult if you
-understand what start-app is doing -- and it is worth it (at some stage)
-to make yourself understand what start-app is doing. So, I suppose I'm
-not too concerned about it, but I will look for opportunities to more
-easily integrate with start-app, if they arise.
+But, it turns out to be possible. I used to think that using elm-route-hash
+with `StartApp` required you to make some local modifications to `StartApp`.
+However, there is a way to avoid that, by creating an intermediate mailbox.
+Here's what you would do.
+
+```elm
+{- In your `Main` module, create a mailbox for your action type ... something
+like this. Of course, the exact details depend on your `Action` type. Note that
+you'll typically need to define a `NoOp` action in order to fulfill the
+requirement for signals to have an initial value.
+-}
+messages : Signal.Mailbox Action
+messages =
+    Signal.mailbox NoOp
+
+
+{- Then, when you call `StartApp.start`, supply the mailbox's signal as an
+input -- something like this (your details may vary).
+-}
+app : App Model
+app =
+    StartApp.start
+        { init = init
+        , update = update
+        , view = view
+        , inputs = [ messages.signal ]
+        }
+
+
+{- And, when you call `RouteHash.start`, supply the mailbox's address --
+something like this (again, your details may vary).
+-}
+port routeTasks : Signal (Task () ())
+port routeTasks =
+    RouteHash.start
+        { prefix = RouteHash.defaultPrefix
+        , address = messages.address
+        , models = app.model
+        , delta2update = ExampleViewer.delta2update
+        , location2action = ExampleViewer.location2action
+        }
+
+```
+
+So, it turns out that using elm-route-hash with `StartApp` is not as painful
+as I originally thought.
 
 
 ## API

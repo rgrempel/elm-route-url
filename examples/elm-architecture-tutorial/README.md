@@ -32,9 +32,10 @@ So, what steps did I follow to do this?
     examples will now be on a single page.
 
 *   I copied `StartApp.elm` from
-    [evancz/start-app](https://github.com/evancz/start-app.git), because it
-    will be necessary to make a small modification to it in order to use it
-    with elm-route-hash.
+    [evancz/start-app](https://github.com/evancz/start-app.git), because I
+    thought it was necessary to make a small modification to it in order to use
+    it with elm-route-hash. **Update**: It turns out that there is a way to
+    make this work with an unmodified `StartApp` after all -- see below.
 
 *   I created an `elm-package.json` file at the root of the project.
 
@@ -85,13 +86,13 @@ does this involve?
 
 *   Our `Main.elm` needs to call `RouteHash.start`
 
-*   We need to make a small modification to start-app, to expose the
-    `Address` to which we can send actions.
+*   We need to make an intermediate `Mailbox Action` to make things work
+    with `StartApp`.
 
-To see how I did this, the best thing is to read the code. Here's a [link
-to the commit that made the changes](https://github.com/rgrempel/elm-route-hash/commit/77228f25de1e05f419839ed9f63a51e046f84493).
-Note that this includes the small change you need to make to start-app,
-if you're using that.
+To see how I did this, the best thing is to read the code. Here's a
+[link to the commit that made the changes](https://github.com/rgrempel/elm-route-hash/commit/77228f25de1e05f419839ed9f63a51e046f84493).
+You can ignore the small change to `StartApp`, because it turns out not to be
+necessary.
 
 So, what do we have now? Here's the [live page](http://rgrempel.github.io/elm-route-hash/examples/elm-architecture-tutorial/basic.html).
 
