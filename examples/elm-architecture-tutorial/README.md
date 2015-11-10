@@ -90,9 +90,11 @@ does this involve?
     with `StartApp`.
 
 To see how I did this, the best thing is to read the code. Here's a
-[link to the commit that made the changes](https://github.com/rgrempel/elm-route-hash/commit/77228f25de1e05f419839ed9f63a51e046f84493).
+[link to the original commit that made the changes](https://github.com/rgrempel/elm-route-hash/commit/77228f25de1e05f419839ed9f63a51e046f84493).
 You can ignore the small change to `StartApp`, because it turns out not to be
-necessary.
+necessary -- instead, an intermediate mailbox can be used in the `Main`
+module. Here's the
+[commit that does that](https://github.com/rgrempel/elm-route-hash/commit/887b03300899600cdebab83522582a7246029d20).
 
 So, what do we have now? Here's the [live page](http://rgrempel.github.io/elm-route-hash/examples/elm-architecture-tutorial/basic.html).
 
