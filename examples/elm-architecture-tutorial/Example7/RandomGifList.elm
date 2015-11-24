@@ -41,7 +41,7 @@ update : Action -> Model -> (Model, Effects Action)
 update message model =
     case message of
         Topic topic ->
-            ( { model | topic <- topic }
+            ( { model | topic = topic }
             , Effects.none
             )
 
@@ -75,7 +75,7 @@ update message model =
                         |> List.map subUpdate
                         |> List.unzip
             in
-                ( { model | gifList <- newGifList }
+                ( { model | gifList = newGifList }
                 , batch fxList
                 )
 
@@ -100,8 +100,8 @@ update message model =
 
             in
                 ( { model
-                        | gifList <- models
-                        , uid <- List.length models
+                        | gifList = models
+                        , uid = List.length models
                   }
                 , batch effects
                 )

@@ -56,14 +56,14 @@ update action model =
     RequestMore ->
       -- When we're explicitly asked to get a random gif, then mark that
       -- we should use the response.
-      ( { model | requestStatus <- Use }
+      ( { model | requestStatus = Use }
       , getRandomGif model.topic
       )
 
     NewGif maybeUrl ->
         case model.requestStatus of
             Use ->
-                ( { model | gifUrl <- Maybe.withDefault model.gifUrl maybeUrl }
+                ( { model | gifUrl = Maybe.withDefault model.gifUrl maybeUrl }
                 , Effects.none
                 )
 
@@ -77,8 +77,8 @@ update action model =
         -- When we get the gif from the URL, then ignore any randomGif requests
         -- that haven't resolved yet.
         ( { model
-                | gifUrl <- url
-                , requestStatus <- Ignore
+                | gifUrl = url
+                , requestStatus = Ignore
           }
         , Effects.none
         )

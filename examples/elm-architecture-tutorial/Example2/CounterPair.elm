@@ -38,12 +38,12 @@ update action model =
 
     Top act ->
       { model |
-          topCounter <- Counter.update act model.topCounter
+          topCounter = Counter.update act model.topCounter
       }
 
     Bottom act ->
       { model |
-          bottomCounter <- Counter.update act model.bottomCounter
+          bottomCounter = Counter.update act model.bottomCounter
       }
 
 

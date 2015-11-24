@@ -121,27 +121,27 @@ update action model =
             ( model, Effects.none )
 
         ShowExample example ->
-            ( { model | currentExample <- example }
+            ( { model | currentExample = example }
             , Effects.none
             )
 
         Example1Action subaction ->
-            ( { model | example1 <- Example1.update subaction model.example1 }
+            ( { model | example1 = Example1.update subaction model.example1 }
             , Effects.none
             )
             
         Example2Action subaction ->
-            ( { model | example2 <- Example2.update subaction model.example2 }
+            ( { model | example2 = Example2.update subaction model.example2 }
             , Effects.none
             )
             
         Example3Action subaction ->
-            ( { model | example3 <- Example3.update subaction model.example3 }
+            ( { model | example3 = Example3.update subaction model.example3 }
             , Effects.none
             )
             
         Example4Action subaction ->
-            ( { model | example4 <- Example4.update subaction model.example4 }
+            ( { model | example4 = Example4.update subaction model.example4 }
             , Effects.none
             )
 
@@ -151,7 +151,7 @@ update action model =
                     Example5.update subaction model.example5
 
             in
-                ( { model | example5 <- fst result }
+                ( { model | example5 = fst result }
                 , Effects.map Example5Action <| snd result
                 )
 
@@ -161,7 +161,7 @@ update action model =
                     Example6.update subaction model.example6
 
             in
-                ( { model | example6 <- fst result }
+                ( { model | example6 = fst result }
                 , Effects.map Example6Action <| snd result
                 )
         
@@ -171,7 +171,7 @@ update action model =
                     Example7.update subaction model.example7
 
             in
-                ( { model | example7 <- fst result }
+                ( { model | example7 = fst result }
                 , Effects.map Example7Action <| snd result
                 )
         
@@ -181,7 +181,7 @@ update action model =
                     Example8.update subaction model.example8
 
             in
-                ( { model | example8 <- fst result }
+                ( { model | example8 = fst result }
                 , Effects.map Example8Action <| snd result
                 )
 

@@ -45,12 +45,12 @@ update action model =
           newCounters = model.counters ++ [ newCounter ]
       in
           { model |
-              counters <- newCounters,
-              nextID <- model.nextID + 1
+              counters = newCounters,
+              nextID = model.nextID + 1
           }
 
     Remove ->
-      { model | counters <- List.drop 1 model.counters }
+      { model | counters = List.drop 1 model.counters }
 
     Modify id counterAction ->
       let updateCounter (counterID, counterModel) =
@@ -58,7 +58,7 @@ update action model =
                 then (counterID, Counter.update counterAction counterModel)
                 else (counterID, counterModel)
       in
-          { model | counters <- List.map updateCounter model.counters }
+          { model | counters = List.map updateCounter model.counters }
 
     Set list ->
         let
