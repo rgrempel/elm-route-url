@@ -13552,9 +13552,15 @@ Elm.ExampleViewer.make = function (_elm) {
          var _p4 = _p3._1;
          var clickAction = _U.eq(_p4,model.currentExample) ? _U.list([]) : _U.list([A2($Html$Events.onClick,address,ShowExample(_p4))]);
          var fullTitle = $Html.text(A2($Basics._op["++"],"Example ",A2($Basics._op["++"],$Basics.toString(_p3._0),A2($Basics._op["++"],": ",_p3._2))));
-         var styleList = _U.eq(_p4,model.currentExample) ? _U.list([A2(_op["=>"],"font-weight","bold")]) : _U.list([A2(_op["=>"],"font-weight","normal")
-                                                                                                                   ,A2(_op["=>"],"color","blue")
-                                                                                                                   ,A2(_op["=>"],"cursor","pointer")]);
+         var styleList = _U.eq(_p4,model.currentExample) ? _U.list([A2(_op["=>"],"font-weight","bold"),A2(_op["=>"],"color","black")]) : _U.list([A2(_op["=>"],
+                                                                                                                                                 "font-weight",
+                                                                                                                                                 "normal")
+                                                                                                                                                 ,A2(_op["=>"],
+                                                                                                                                                 "color",
+                                                                                                                                                 "grey")
+                                                                                                                                                 ,A2(_op["=>"],
+                                                                                                                                                 "cursor",
+                                                                                                                                                 "pointer")]);
          return A2($Html.p,A2($List._op["::"],$Html$Attributes.style(styleList),clickAction),_U.list([fullTitle]));
       };
       var toc = A2($Html.div,
@@ -13581,23 +13587,10 @@ Elm.ExampleViewer.make = function (_elm) {
             case "Example7": return A2($Example7$RandomGifList.view,A2($Signal.forwardTo,address,Example7Action),model.example7);
             default: return A2($Example8$SpinSquarePair.view,A2($Signal.forwardTo,address,Example8Action),model.example8);}
       }();
-      return A2($Html.table,
+      return A2($Html.div,
       _U.list([]),
-      _U.list([A2($Html.tr,
-      _U.list([]),
-      _U.list([A2($Html.td,
-              _U.list([$Html$Attributes.style(_U.list([A2(_op["=>"],"vertical-align","top")
-                                                      ,A2(_op["=>"],"width","25%")
-                                                      ,A2(_op["=>"],"padding","8px")
-                                                      ,A2(_op["=>"],"margin","8px")]))]),
-              _U.list([toc]))
-              ,A2($Html.td,
-              _U.list([$Html$Attributes.style(_U.list([A2(_op["=>"],"vertical-align","top")
-                                                      ,A2(_op["=>"],"width","75%")
-                                                      ,A2(_op["=>"],"padding","8px")
-                                                      ,A2(_op["=>"],"margin","8px")
-                                                      ,A2(_op["=>"],"border","1px dotted black")]))]),
-              _U.list([viewExample]))]))]));
+      _U.list([A2($Html.div,_U.list([$Html$Attributes.$class("column-1")]),_U.list([toc]))
+              ,A2($Html.div,_U.list([$Html$Attributes.$class("column-2")]),_U.list([viewExample]))]));
    });
    var location2action = function (list) {
       var _p6 = list;

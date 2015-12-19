@@ -1,8 +1,8 @@
 module ExampleViewer where
 
 import Effects exposing (Effects, map, batch, Never)
-import Html exposing (Html, div, p, text, table, tr, td)
-import Html.Attributes exposing (style)
+import Html exposing (..)
+import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Signal exposing (forwardTo)
 import RouteHash exposing (HashUpdate)
@@ -224,12 +224,13 @@ view address model =
                 styleList =
                     if example == model.currentExample
                         then
-                            [ "font-weight" => "bold"
+                            [ "font-weight" => "bold",
+                              "color" => "black"
                             ]
                         else
-                            [ "font-weight" => "normal"
-                            , "color" => "blue"
-                            , "cursor" => "pointer"
+                            [ "font-weight" => "normal",
+                              "color" => "grey",
+                              "cursor" => "pointer"
                             ]
 
                 -- Note that we compose the full title out of some information the
@@ -263,29 +264,10 @@ view address model =
                     ]
 
     in
-        table []
-            [ tr []
-                [ td 
-                    [ style
-                        [ "vertical-align" => "top"
-                        , "width" => "25%"
-                        , "padding" => "8px"
-                        , "margin" => "8px"
-                        ]
-                    ]
-                    [ toc ]
-                , td
-                    [ style
-                        [ "vertical-align" => "top"
-                        , "width" => "75%"
-                        , "padding" => "8px"
-                        , "margin" => "8px"
-                        , "border" => "1px dotted black"
-                        ]
-                    ]
-                    [ viewExample ]
+        div [ ]
+                [ div [ class "column-1" ] [ toc ],
+                  div [ class "column-2" ] [ viewExample ]
                 ]
-            ]
                     
 
 -- Routing
