@@ -225,12 +225,12 @@ view address model =
                     if example == model.currentExample
                         then
                             [ "font-weight" => "bold",
-                              "color" => "black"
+                            , "color" => "black"
                             ]
                         else
-                            [ "font-weight" => "normal",
-                              "color" => "grey",
-                              "cursor" => "pointer"
+                            [ "font-weight" => "normal"
+                            , "color" => "blue"
+                            , "cursor" => "pointer"
                             ]
 
                 -- Note that we compose the full title out of some information the
@@ -265,8 +265,8 @@ view address model =
 
     in
         div [ ]
-                [ div [ class "column-1" ] [ toc ],
-                  div [ class "column-2" ] [ viewExample ]
+                [ div [ class "column-1" ] [ toc ]
+                , div [ class "column-2" ] [ viewExample ]
                 ]
                     
 
