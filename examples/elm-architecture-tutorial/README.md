@@ -1,3 +1,15 @@
+# To run and view the app:
+
+$ cd examples/elm-architecture-tutorial
+$ elm reactor
+
+
+* In your browser, navigate to:
+
+`http://0.0.0.0:8000/index.html`
+
+
+
 # The Elm Architecture Tutorial as a single page app
 
 In order to illustrate how to use

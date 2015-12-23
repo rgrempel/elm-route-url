@@ -1,0 +1,21 @@
+
+body {
+  font-family: Courier, Arial, Helvetica, sans-serif;
+  font-size: 0.85rem;
+}
+
+.column-1 {
+  width: 28%;
+  display: inline;
+  float: left;
+  border: 0.0625rem solid #ccc;
+  padding: 0.5rem;
+}
+
+.column-2 {
+  width: 68%;
+  display: inline;
+  float: right;
+  border: 0.0625rem solid #ccc;
+  padding: 0.5rem;
+}
