@@ -1,9 +1,10 @@
-module Example2.CounterPair where
+module Example2.CounterPair exposing (..)
 
 import Example2.Counter as Counter
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import Html.App exposing (map)
 import RouteHash exposing (HashUpdate)
 
 
@@ -49,12 +50,12 @@ update action model =
 
 -- VIEW
 
-view : Signal.Address Action -> Model -> Html
-view address model =
+view : Model -> Html Action
+view model =
   div []
-    [ Counter.view (Signal.forwardTo address Top) model.topCounter
-    , Counter.view (Signal.forwardTo address Bottom) model.bottomCounter
-    , button [ onClick address Reset ] [ text "RESET" ]
+    [ map Top (Counter.view model.topCounter)
+    , map Bottom (Counter.view model.bottomCounter)
+    , button [ onClick Reset ] [ text "RESET" ]
     ]
 
 
@@ -76,7 +77,7 @@ delta2update previous current =
     -- we need a few more HashUpdate helpers, to help combining them?
     [ Counter.delta2update previous.topCounter current.topCounter
     , Counter.delta2update previous.bottomCounter current.bottomCounter
-    ] 
+    ]
         |> List.map (Maybe.withDefault [] << Maybe.map RouteHash.extract)
         |> List.concat
         |> RouteHash.set

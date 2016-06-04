@@ -1,10 +1,9 @@
-module ExampleViewer where
+module ExampleViewer exposing (..)
 
-import Effects exposing (Effects, map, batch, Never)
 import Html exposing (Html, div, p, text, table, tr, td)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
-import Signal exposing (forwardTo)
+import Html.App exposing (map)
 import RouteHash exposing (HashUpdate)
 
 
@@ -69,7 +68,7 @@ type alias Model =
 
 
 -- Now, to init our model, we have to collect each examples init
-init : (Model, Effects Action)
+init : (Model, Cmd Action)
 init =
     let
         model =
@@ -86,17 +85,25 @@ init =
             }
 
         effects =
-            batch
+            Cmd.batch
                 -- We happen to know that examples 1 through 4
                 -- have no effects defined.
-                [ Effects.map Example5Action <| snd Example5.init
-                , Effects.map Example6Action <| snd Example6.init
-                , Effects.map Example7Action <| snd Example7.init
-                , Effects.map Example8Action <| snd Example8.init
+                [ Cmd.map Example5Action <| snd Example5.init
+                , Cmd.map Example6Action <| snd Example6.init
+                , Cmd.map Example7Action <| snd Example7.init
+                , Cmd.map Example8Action <| snd Example8.init
                 ]
     
     in
         (model, effects)
+
+
+-- SUBSCRIPTIONS
+
+-- I happen to know that only Example8 uses them
+subscriptions : Model -> Sub Action
+subscriptions model =
+    Sub.map Example8Action (Example8.subscriptions model.example8)
 
 
 -- UPDATE
@@ -114,35 +121,35 @@ type Action
     | NoOp
 
 
-update : Action -> Model -> (Model, Effects Action)
+update : Action -> Model -> (Model, Cmd Action)
 update action model =
     case action of
         NoOp ->
-            ( model, Effects.none )
+            ( model, Cmd.none )
 
         ShowExample example ->
             ( { model | currentExample = example }
-            , Effects.none
+            , Cmd.none
             )
 
         Example1Action subaction ->
             ( { model | example1 = Example1.update subaction model.example1 }
-            , Effects.none
+            , Cmd.none
             )
             
         Example2Action subaction ->
             ( { model | example2 = Example2.update subaction model.example2 }
-            , Effects.none
+            , Cmd.none
             )
             
         Example3Action subaction ->
             ( { model | example3 = Example3.update subaction model.example3 }
-            , Effects.none
+            , Cmd.none
             )
             
         Example4Action subaction ->
             ( { model | example4 = Example4.update subaction model.example4 }
-            , Effects.none
+            , Cmd.none
             )
 
         Example5Action subaction ->
@@ -152,7 +159,7 @@ update action model =
 
             in
                 ( { model | example5 = fst result }
-                , Effects.map Example5Action <| snd result
+                , Cmd.map Example5Action <| snd result
                 )
 
         Example6Action subaction ->
@@ -162,7 +169,7 @@ update action model =
 
             in
                 ( { model | example6 = fst result }
-                , Effects.map Example6Action <| snd result
+                , Cmd.map Example6Action <| snd result
                 )
         
         Example7Action subaction ->
@@ -172,7 +179,7 @@ update action model =
 
             in
                 ( { model | example7 = fst result }
-                , Effects.map Example7Action <| snd result
+                , Cmd.map Example7Action <| snd result
                 )
         
         Example8Action subaction ->
@@ -182,7 +189,7 @@ update action model =
 
             in
                 ( { model | example8 = fst result }
-                , Effects.map Example8Action <| snd result
+                , Cmd.map Example8Action <| snd result
                 )
 
 -- VIEW
@@ -190,34 +197,34 @@ update action model =
 (=>) = (,)
 
 
-view : Signal.Address Action -> Model -> Html
-view address model =
+view : Model -> Html Action
+view model =
     let
         viewExample =
             case model.currentExample of
                 Example1 ->
-                    Example1.view (forwardTo address Example1Action) model.example1
+                    map Example1Action (Example1.view model.example1)
 
                 Example2 ->
-                    Example2.view (forwardTo address Example2Action) model.example2
+                    map Example2Action (Example2.view model.example2)
 
                 Example3 ->
-                    Example3.view (forwardTo address Example3Action) model.example3
+                    map Example3Action (Example3.view model.example3)
 
                 Example4 ->
-                    Example4.view (forwardTo address Example4Action) model.example4
+                    map Example4Action (Example4.view model.example4)
 
                 Example5 ->
-                    Example5.view (forwardTo address Example5Action) model.example5
+                    map Example5Action (Example5.view model.example5)
 
                 Example6 ->
-                    Example6.view (forwardTo address Example6Action) model.example6
+                    map Example6Action (Example6.view model.example6)
 
                 Example7 ->
-                    Example7.view (forwardTo address Example7Action) model.example7
+                    map Example7Action (Example7.view model.example7)
 
                 Example8 ->
-                    Example8.view (forwardTo address Example8Action) model.example8
+                    map Example8Action (Example8.view model.example8)
 
         makeTitle (index, example, title) =
             let
@@ -243,7 +250,7 @@ view address model =
                 clickAction =
                     if example == model.currentExample
                         then []
-                        else [ onClick address (ShowExample example) ] 
+                        else [ onClick (ShowExample example) ] 
 
             in
                 p   ( style styleList :: clickAction ) 

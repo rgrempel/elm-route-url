@@ -1,9 +1,10 @@
-module Example3.CounterList where
+module Example3.CounterList exposing (..)
 
 import Example3.Counter as Counter
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import Html.App exposing (map)
 import RouteHash exposing (HashUpdate)
 import Result.Extra
 import String
@@ -74,18 +75,20 @@ update action model =
 
 -- VIEW
 
-view : Signal.Address Action -> Model -> Html
-view address model =
-  let counters = List.map (viewCounter address) model.counters
-      remove = button [ onClick address Remove ] [ text "Remove" ]
-      insert = button [ onClick address Insert ] [ text "Add" ]
+view : Model -> Html Action
+view model =
+  let
+      counters = List.map viewCounter model.counters
+      remove = button [ onClick Remove ] [ text "Remove" ]
+      insert = button [ onClick Insert ] [ text "Add" ]
+
   in
       div [] ([remove, insert] ++ counters)
 
 
-viewCounter : Signal.Address Action -> (ID, Counter.Model) -> Html
-viewCounter address (id, model) =
-  Counter.view (Signal.forwardTo address (Modify id)) model
+viewCounter : (ID, Counter.Model) -> Html Action
+viewCounter (id, model) =
+  map (Modify id) (Counter.view model)
 
 
 -- We add a separate function to get a title, which the ExampleViewer uses to
@@ -101,7 +104,7 @@ title = "List of Counters"
 -- You could do this in a variety of ways. We'll ignore the ID's, and just
 -- encode the value of each Counter in the list -- so we'll end up with
 -- something like /0/1/5 or whatever. When we recreate that, we won't
--- necessarily have the same IDs, but that doesn't matter for this example. 
+-- necessarily have the same IDs, but that doesn't matter for this example.
 -- If it mattered, we'd have to do this a different way.
 delta2update : Model -> Model -> Maybe HashUpdate
 delta2update previous current =

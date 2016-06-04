@@ -1,9 +1,9 @@
-module Example7.RandomGifList where
+module Example7.RandomGifList exposing (..)
 
-import Effects exposing (Effects, map, batch, Never)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import Html.App exposing (map)
 import Json.Decode as Json
 import RouteHash exposing (HashUpdate)
 
@@ -19,10 +19,10 @@ type alias Model =
     }
 
 
-init : (Model, Effects Action)
+init : (Model, Cmd Action)
 init =
     ( Model "" [] 0
-    , Effects.none
+    , Cmd.none
     )
 
 
@@ -37,12 +37,12 @@ type Action
     | Set (List (String, Maybe String))
 
 
-update : Action -> Model -> (Model, Effects Action)
+update : Action -> Model -> (Model, Cmd Action)
 update message model =
     case message of
         Topic topic ->
             ( { model | topic = topic }
-            , Effects.none
+            , Cmd.none
             )
 
         Create ->
@@ -54,7 +54,7 @@ update message model =
                     Model "" (model.gifList ++ [(model.uid, newRandomGif)]) (model.uid + 1)
             in
                 ( newModel
-                , map (SubMsg model.uid) fx
+                , Cmd.map (SubMsg model.uid) fx
                 )
 
         SubMsg msgId msg ->
@@ -65,10 +65,10 @@ update message model =
                             (newRandomGif, fx) = RandomGif.update msg randomGif
                         in
                             ( (id, newRandomGif)
-                            , map (SubMsg id) fx
+                            , Cmd.map (SubMsg id) fx
                             )
                     else
-                        (entry, Effects.none)
+                        (entry, Cmd.none)
 
                 (newGifList, fxList) =
                     model.gifList
@@ -76,7 +76,7 @@ update message model =
                         |> List.unzip
             in
                 ( { model | gifList = newGifList }
-                , batch fxList
+                , Cmd.batch fxList
                 )
 
         Set list ->
@@ -91,7 +91,7 @@ update message model =
                     inits |>
                         List.indexedMap (\index item ->
                             ( (index, fst item)
-                            , Effects.map (SubMsg index) (snd item)
+                            , Cmd.map (SubMsg index) (snd item)
                             )
                         )
 
@@ -103,7 +103,7 @@ update message model =
                         | gifList = models
                         , uid = List.length models
                   }
-                , batch effects
+                , Cmd.batch effects
                 )
 
 
@@ -112,28 +112,33 @@ update message model =
 (=>) = (,)
 
 
-view : Signal.Address Action -> Model -> Html
-view address model =
+view : Model -> Html Action
+view model =
     div []
         [ input
             [ placeholder "What kind of gifs do you want?"
             , value model.topic
-            , onEnter address Create
-            , on "input" targetValue (Signal.message address << Topic)
+            , onEnter Create
+            , onInput Topic
             , inputStyle
             ]
             []
-        , div [ style [ "display" => "flex", "flex-wrap" => "wrap" ] ]
-            (List.map (elementView address) model.gifList)
+        , div
+            [ style
+                [ "display" => "flex"
+                , "flex-wrap" => "wrap"
+                ]
+            ]
+            (List.map elementView model.gifList)
         ]
 
 
-elementView : Signal.Address Action -> (Int, RandomGif.Model) -> Html
-elementView address (id, model) =
-    RandomGif.view (Signal.forwardTo address (SubMsg id)) model
+elementView : (Int, RandomGif.Model) -> Html Action
+elementView (id, model) =
+    map (SubMsg id) (RandomGif.view model)
 
 
-inputStyle : Attribute
+inputStyle : Attribute any
 inputStyle =
     style
         [ ("width", "100%")
@@ -144,11 +149,12 @@ inputStyle =
         ]
 
 
-onEnter : Signal.Address a -> a -> Attribute
-onEnter address value =
-    on "keydown"
-        (Json.customDecoder keyCode is13)
-        (\_ -> Signal.message address value)
+onEnter : Action -> Attribute Action
+onEnter action =
+    on "keydown" <|
+        Json.map
+            (always action)
+            (Json.customDecoder keyCode is13)
 
 
 is13 : Int -> Result String ()
@@ -172,7 +178,7 @@ title = "List of Random Gifs"
 -- could track them if it mattered.
 delta2update : Model -> Model -> Maybe HashUpdate
 delta2update previous current =
-    current.gifList 
+    current.gifList
         |> List.filterMap (snd >> RandomGif.encodeLocation)
         |> List.concat
         |> RouteHash.set
@@ -193,7 +199,7 @@ location2action list =
 
 inTwos : List a -> List (a, a)
 inTwos list =
-    let 
+    let
         step sublist result =
             case sublist of
                 a :: b :: rest ->

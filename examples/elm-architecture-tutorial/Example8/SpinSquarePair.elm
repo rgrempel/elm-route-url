@@ -1,8 +1,8 @@
-module Example8.SpinSquarePair where
+module Example8.SpinSquarePair exposing (..)
 
-import Effects exposing (Effects)
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.App exposing (map)
 import Example8.SpinSquare as SpinSquare
 import RouteHash exposing (HashUpdate)
 
@@ -15,16 +15,16 @@ type alias Model =
     }
 
 
-init : (Model, Effects Action)
+init : (Model, Cmd Action)
 init =
   let
     (left, leftFx) = SpinSquare.init
     (right, rightFx) = SpinSquare.init
   in
     ( Model left right
-    , Effects.batch
-        [ Effects.map Left leftFx
-        , Effects.map Right rightFx
+    , Cmd.batch
+        [ Cmd.map Left leftFx
+        , Cmd.map Right rightFx
         ]
     )
 
@@ -36,7 +36,15 @@ type Action
     | Right SpinSquare.Action
 
 
-update : Action -> Model -> (Model, Effects Action)
+subscriptions : Model -> Sub Action
+subscriptions model =
+    Sub.batch
+        [ Sub.map Left (SpinSquare.subscriptions model.left)
+        , Sub.map Right (SpinSquare.subscriptions model.right)
+        ]
+
+
+update : Action -> Model -> (Model, Cmd Action)
 update action model =
   case action of
     Left act ->
@@ -44,7 +52,7 @@ update action model =
         (left, fx) = SpinSquare.update act model.left
       in
         ( Model left model.right
-        , Effects.map Left fx
+        , Cmd.map Left fx
         )
 
     Right act ->
@@ -52,7 +60,7 @@ update action model =
         (right, fx) = SpinSquare.update act model.right
       in
         ( Model model.left right
-        , Effects.map Right fx
+        , Cmd.map Right fx
         )
 
 
@@ -62,11 +70,11 @@ update action model =
 (=>) = (,)
 
 
-view : Signal.Address Action -> Model -> Html
-view address model =
+view : Model -> Html Action
+view model =
   div [ style [ "display" => "flex" ] ]
-    [ SpinSquare.view (Signal.forwardTo address Left) model.left
-    , SpinSquare.view (Signal.forwardTo address Right) model.right
+    [ map Left (SpinSquare.view model.left)
+    , map Right (SpinSquare.view model.right)
     ]
 
 

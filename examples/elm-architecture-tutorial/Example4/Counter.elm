@@ -1,8 +1,9 @@
-module Example4.Counter (Model, init, Action, update, view, viewWithRemoveButton, Context) where
+module Example4.Counter exposing (Model, init, Action, update, view, viewWithRemoveButton, Context)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import Html.App exposing (map)
 
 
 -- MODEL
@@ -28,33 +29,33 @@ update action model =
 
 -- VIEW
 
-view : Signal.Address Action -> Model -> Html
-view address model =
+view : Model -> Html Action
+view model =
   div []
-    [ button [ onClick address Decrement ] [ text "-" ]
+    [ button [ onClick Decrement ] [ text "-" ]
     , div [ countStyle ] [ text (toString model) ]
-    , button [ onClick address Increment ] [ text "+" ]
+    , button [ onClick Increment ] [ text "+" ]
     ]
 
 
-type alias Context =
-    { actions : Signal.Address Action
-    , remove : Signal.Address ()
+type alias Context super =
+    { modify : Action -> super
+    , remove : super
     }
 
 
-viewWithRemoveButton : Context -> Model -> Html
+viewWithRemoveButton : Context super -> Model -> Html super
 viewWithRemoveButton context model =
   div []
-    [ button [ onClick context.actions Decrement ] [ text "-" ]
+    [ map context.modify (button [ onClick Decrement ] [ text "-" ])
     , div [ countStyle ] [ text (toString model) ]
-    , button [ onClick context.actions Increment ] [ text "+" ]
+    , map context.modify (button [ onClick Increment ] [ text "+" ])
     , div [ countStyle ] []
-    , button [ onClick context.remove () ] [ text "X" ]
+    , button [ onClick context.remove ] [ text "X" ]
     ]
 
 
-countStyle : Attribute
+countStyle : Attribute any
 countStyle =
   style
     [ ("font-size", "20px")

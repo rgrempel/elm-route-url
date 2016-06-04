@@ -1,8 +1,8 @@
-module Example6.RandomGifPair where
+module Example6.RandomGifPair exposing (..)
 
-import Effects exposing (Effects)
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.App exposing (map)
 import RouteHash exposing (HashUpdate)
 
 import Example6.RandomGif as RandomGif
@@ -17,7 +17,7 @@ type alias Model =
 
 
 -- Rewrote to move initialization strings from Main.elm
-init : (Model, Effects Action)
+init : (Model, Cmd Action)
 init =
   let
     leftTopic = "funny cats"
@@ -26,9 +26,9 @@ init =
     (right, rightFx) = RandomGif.init rightTopic
   in
     ( Model left right
-    , Effects.batch
-        [ Effects.map Left leftFx
-        , Effects.map Right rightFx
+    , Cmd.batch
+        [ Cmd.map Left leftFx
+        , Cmd.map Right rightFx
         ]
     )
 
@@ -40,7 +40,7 @@ type Action
     | Right RandomGif.Action
 
 
-update : Action -> Model -> (Model, Effects Action)
+update : Action -> Model -> (Model, Cmd Action)
 update action model =
   case action of
     Left act ->
@@ -48,7 +48,7 @@ update action model =
         (left, fx) = RandomGif.update act model.left
       in
         ( Model left model.right
-        , Effects.map Left fx
+        , Cmd.map Left fx
         )
 
     Right act ->
@@ -56,17 +56,17 @@ update action model =
         (right, fx) = RandomGif.update act model.right
       in
         ( Model model.left right
-        , Effects.map Right fx
+        , Cmd.map Right fx
         )
 
 
 -- VIEW
 
-view : Signal.Address Action -> Model -> Html
-view address model =
+view : Model -> Html Action
+view model =
   div [ style [ ("display", "flex") ] ]
-    [ RandomGif.view (Signal.forwardTo address Left) model.left
-    , RandomGif.view (Signal.forwardTo address Right) model.right
+    [ map Left (RandomGif.view model.left)
+    , map Right (RandomGif.view model.right)
     ]
 
 
@@ -116,6 +116,6 @@ location2action list =
                 [ List.map Left <| RandomGif.location2action [left]
                 , List.map Right <| RandomGif.location2action [right]
                 ]
-            
+
         _ ->
             []

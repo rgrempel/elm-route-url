@@ -1,6 +1,5 @@
-module Example6.RandomGif where
+module Example6.RandomGif exposing (..)
 
-import Effects exposing (Effects, Never)
 import Html exposing (..)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
@@ -30,7 +29,7 @@ type RequestStatus
 
 -- We start the requestStatus as Use so that we will use the response to the
 -- initial request we issue here.
-init : String -> (Model, Effects Action)
+init : String -> (Model, Cmd Action)
 init topic =
   ( Model topic "assets/waiting.gif" Use
   , getRandomGif topic
@@ -44,11 +43,12 @@ init topic =
 -- random gif.
 type Action
     = RequestMore
-    | NewGif (Maybe String)
+    | HttpError Http.Error
+    | NewGif String
     | NewGifFromLocation String
 
 
-update : Action -> Model -> (Model, Effects Action)
+update : Action -> Model -> (Model, Cmd Action)
 update action model =
   case action of
     RequestMore ->
@@ -58,18 +58,18 @@ update action model =
       , getRandomGif model.topic
       )
 
-    NewGif maybeUrl ->
+    NewGif url ->
         case model.requestStatus of
             Use ->
-                ( { model | gifUrl = Maybe.withDefault model.gifUrl maybeUrl }
-                , Effects.none
+                ( { model | gifUrl = url }
+                , Cmd.none
                 )
 
             -- This will be set to ignore if our location has changed since
             -- the request was issued. In that case, we want to ignore the
             -- result of the randomGif request (which was, of course, async)
             Ignore ->
-                ( model, Effects.none )
+                ( model, Cmd.none )
 
     NewGifFromLocation url ->
         -- When we get the gif from the URL, then ignore any randomGif requests
@@ -78,24 +78,28 @@ update action model =
                 | gifUrl = url
                 , requestStatus = Ignore
           }
-        , Effects.none
+        , Cmd.none
         )
+
+    HttpError error ->
+        -- Should really show the error ... do nothing for now.
+        ( model, Cmd.none )
 
 -- VIEW
 
 (=>) = (,)
 
 
-view : Signal.Address Action -> Model -> Html
-view address model =
+view : Model -> Html Action
+view model =
   div [ style [ "width" => "200px" ] ]
     [ h2 [headerStyle] [text model.topic]
     , div [imgStyle model.gifUrl] []
-    , button [ onClick address RequestMore ] [ text "More Please!" ]
+    , button [ onClick RequestMore ] [ text "More Please!" ]
     ]
 
 
-headerStyle : Attribute
+headerStyle : Attribute any
 headerStyle =
   style
     [ "width" => "200px"
@@ -103,7 +107,7 @@ headerStyle =
     ]
 
 
-imgStyle : String -> Attribute
+imgStyle : String -> Attribute any
 imgStyle url =
   style
     [ "display" => "inline-block"
@@ -117,12 +121,10 @@ imgStyle url =
 
 -- EFFECTS
 
-getRandomGif : String -> Effects Action
+getRandomGif : String -> Cmd Action
 getRandomGif topic =
   Http.get decodeUrl (randomUrl topic)
-    |> Task.toMaybe
-    |> Task.map NewGif
-    |> Effects.task
+    |> Task.perform HttpError NewGif
 
 
 randomUrl : String -> String

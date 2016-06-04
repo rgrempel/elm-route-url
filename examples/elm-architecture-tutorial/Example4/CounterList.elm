@@ -1,4 +1,4 @@
-module Example4.CounterList where
+module Example4.CounterList exposing (..)
 
 import Example4.Counter as Counter
 import Html exposing (..)
@@ -73,19 +73,17 @@ update action model =
 
 -- VIEW
 
-view : Signal.Address Action -> Model -> Html
-view address model =
-  let insert = button [ onClick address Insert ] [ text "Add" ]
+view : Model -> Html Action
+view model =
+  let insert = button [ onClick Insert ] [ text "Add" ]
   in
-      div [] (insert :: List.map (viewCounter address) model.counters)
+      div [] (insert :: List.map viewCounter model.counters)
 
 
-viewCounter : Signal.Address Action -> (ID, Counter.Model) -> Html
-viewCounter address (id, model) =
+viewCounter : (ID, Counter.Model) -> Html Action
+viewCounter (id, model) =
   let context =
-        Counter.Context
-          (Signal.forwardTo address (Modify id))
-          (Signal.forwardTo address (always (Remove id)))
+        Counter.Context (Modify id) (Remove id)
   in
       Counter.viewWithRemoveButton context model
 
@@ -104,7 +102,7 @@ title = "List of Counters (individually removable)"
 -- You could do this in a variety of ways. We'll ignore the ID's, and just
 -- encode the value of each Counter in the list -- so we'll end up with
 -- something like /0/1/5 or whatever. When we recreate that, we won't
--- necessarily have the same IDs, but that doesn't matter for this example. 
+-- necessarily have the same IDs, but that doesn't matter for this example.
 -- If it mattered, we'd have to do this a different way.
 delta2update : Model -> Model -> Maybe HashUpdate
 delta2update previous current =

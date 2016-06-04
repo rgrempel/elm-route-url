@@ -1,6 +1,5 @@
-module Example7.RandomGif where
+module Example7.RandomGif exposing (..)
 
-import Effects exposing (Effects, Never)
 import Html exposing (..)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
@@ -23,12 +22,12 @@ type alias Model =
 -- We provide for initializing with the gifUrl already set, since that is how
 -- the routing will do it. If the gifUrl is provided, then we skip getting a
 -- random one.
-init : String -> Maybe String -> (Model, Effects Action)
+init : String -> Maybe String -> (Model, Cmd Action)
 init topic gifUrl =
   ( Model topic gifUrl
   , if gifUrl == Nothing
         then getRandomGif topic
-        else Effects.none
+        else Cmd.none
   )
 
 
@@ -36,19 +35,24 @@ init topic gifUrl =
 
 type Action
     = RequestMore
-    | NewGif (Maybe String)
+    | HttpError Http.Error
+    | NewGif String
 
 
-update : Action -> Model -> (Model, Effects Action)
+update : Action -> Model -> (Model, Cmd Action)
 update action model =
   case action of
     RequestMore ->
       (model, getRandomGif model.topic)
 
-    NewGif maybeUrl ->
-      ( Model model.topic (Maybe.oneOf [maybeUrl, model.gifUrl])
-      , Effects.none
+    NewGif url ->
+      ( Model model.topic (Just url)
+      , Cmd.none
       )
+
+    HttpError error ->
+      -- Should really show the error ... do nothing for now.
+      ( model, Cmd.none )
 
 
 -- VIEW
@@ -56,16 +60,16 @@ update action model =
 (=>) = (,)
 
 
-view : Signal.Address Action -> Model -> Html
-view address model =
+view : Model -> Html Action
+view model =
   div [ style [ "width" => "200px" ] ]
     [ h2 [headerStyle] [text model.topic]
     , div [imgStyle (Maybe.withDefault "assets/waiting.gif" model.gifUrl)] []
-    , button [ onClick address RequestMore ] [ text "More Please!" ]
+    , button [ onClick RequestMore ] [ text "More Please!" ]
     ]
 
 
-headerStyle : Attribute
+headerStyle : Attribute any
 headerStyle =
   style
     [ "width" => "200px"
@@ -73,7 +77,7 @@ headerStyle =
     ]
 
 
-imgStyle : String -> Attribute
+imgStyle : String -> Attribute any
 imgStyle url =
   style
     [ "display" => "inline-block"
@@ -87,12 +91,10 @@ imgStyle url =
 
 -- EFFECTS
 
-getRandomGif : String -> Effects Action
+getRandomGif : String -> Cmd Action
 getRandomGif topic =
   Http.get decodeUrl (randomUrl topic)
-    |> Task.toMaybe
-    |> Task.map NewGif
-    |> Effects.task
+    |> Task.perform HttpError NewGif
 
 
 randomUrl : String -> String
@@ -118,7 +120,7 @@ encodeLocation model =
     if (model.gifUrl == Nothing)
         then
             Nothing
-        
+
         else
             Just
                 [ model.topic
