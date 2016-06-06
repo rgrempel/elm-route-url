@@ -8,7 +8,8 @@
     ],
     "exposed-modules": [
         "RouteUrl",
-        "RouteHash"
+        "RouteHash",
+        "RouteUrl.Builder"
     ],
     "dependencies": {
         "elm-lang/core": "4.0.1 <= v < 5.0.0",
