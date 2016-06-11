@@ -49,6 +49,7 @@ something better.
 import RouteUrl exposing (HistoryEntry(..), UrlChange)
 import Dict exposing (Dict)
 import Http exposing (uriEncode, uriDecode)
+import Regex exposing (HowMany(..), replace, regex)
 import String
 import Erl
 
@@ -223,13 +224,18 @@ toChange stuffIntoHash (Builder builder) =
                 then "#!/"
                 else "/"
 
+        queryPrefix =
+            if stuffIntoHash
+                then "^"
+                else "?"
+
         joinedPath =
             String.join "/" (List.map uriEncode builder.path)
 
         joinedQuery =
             if Dict.isEmpty builder.query
                 then ""
-                else String.join "&" (Dict.foldl eachQuery [] builder.query)
+                else queryPrefix ++ String.join "&" (Dict.foldl eachQuery [] builder.query)
 
         eachQuery key value memo =
             (uriEncode key ++ "=" ++ uriEncode value) :: memo
@@ -277,7 +283,8 @@ fromUrl url =
             { entry = NewEntry
             , path = erl.path
             , query = erl.query
-            , hash = erl.hash
+            -- note that Erl.parse doesn't seem to decode the hash for you
+            , hash = uriDecode erl.hash
             }
 
 
@@ -291,16 +298,27 @@ fromUrl url =
 fromHash : String -> Builder
 fromHash url =
     let
-        erl =
+        outer =
             Erl.parse url
 
-    -- TODO: massage the hash and do it again ...
+        stripInitial =
+            replace (AtMost 1) (regex "^!") (always "") outer.hash
+
+        convertSubhash =
+            replace (AtMost 1) (regex "$") (always "#") stripInitial
+
+        convertQuery =
+            replace (AtMost 1) (regex "\\^") (always "?") convertSubhash
+
+        inner =
+            Erl.parse convertQuery
+
     in
         Builder
             { entry = NewEntry
-            , path = erl.path
-            , query = erl.query
-            , hash = erl.hash
+            , path = inner.path
+            , query = inner.query
+            , hash = inner.hash
             }
 
 
