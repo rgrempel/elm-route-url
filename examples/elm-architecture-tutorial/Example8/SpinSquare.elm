@@ -138,7 +138,8 @@ view model =
 -- Again, we don't necessarily need to use the same signature always ...
 delta2update : Model -> Maybe String
 delta2update current =
-    -- We only want to update if our animation state is Nothing
+    -- We only want to update if our animation state is Nothing, since
+    -- we don't want to set the history for every animation step
     if current.animationState == Nothing
         then
             Just <|

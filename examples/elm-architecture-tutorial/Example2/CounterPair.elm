@@ -6,6 +6,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Html.App exposing (map)
 import RouteHash exposing (HashUpdate)
+import RouteUrl.Builder exposing (Builder, builder, insertQuery, getQuery)
 
 
 -- MODEL
@@ -67,7 +68,7 @@ title : String
 title = "Pair of Counters"
 
 
--- Routing
+-- Routing (Old API)
 
 -- To encode state in the URL, we'll just delegate & concatenate
 -- This will produce partial URLs like /6/7
@@ -97,3 +98,31 @@ location2action list =
         -- If we don't have what we expect, then no actions
         _ ->
             []
+
+
+-- Routing (New API)
+
+-- We'll put the two counters in the query parameters, just for fun
+delta2builder : Model -> Model -> Maybe Builder
+delta2builder previous current =
+    builder
+    |> insertQuery "top" (Counter.delta2fragment previous.topCounter current.topCounter)
+    |> insertQuery "bottom" (Counter.delta2fragment previous.bottomCounter current.bottomCounter)
+    |> Just
+
+
+builder2messages : Builder -> List Action
+builder2messages builder =
+    let
+        left =
+            getQuery "top" builder
+            |> Maybe.map ((List.map Top) << Counter.fragment2messages)
+
+        right =
+            getQuery "bottom" builder
+            |> Maybe.map ((List.map Bottom) << Counter.fragment2messages)
+
+    in
+        [ left, right ]
+        |> List.filterMap identity
+        |> List.concat

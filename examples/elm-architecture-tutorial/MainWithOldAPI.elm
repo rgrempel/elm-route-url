@@ -11,5 +11,5 @@ main =
         , init = ExampleViewer.init
         , update = ExampleViewer.update
         , view = ExampleViewer.view
-        , subscriptions = ExampleViewer.subscriptions 
+        , subscriptions = ExampleViewer.subscriptions
         }

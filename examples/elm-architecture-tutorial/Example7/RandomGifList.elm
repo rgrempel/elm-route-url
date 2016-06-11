@@ -6,6 +6,7 @@ import Html.Events exposing (..)
 import Html.App exposing (map)
 import Json.Decode as Json
 import RouteHash exposing (HashUpdate)
+import RouteUrl.Builder exposing (Builder, builder, path, replacePath)
 
 import Example7.RandomGif as RandomGif
 
@@ -171,7 +172,7 @@ title : String
 title = "List of Random Gifs"
 
 
--- Routing
+-- Routing (Old API)
 
 -- We record each thing in the gifList. Note that we don't track the ID's,
 -- since in this app there isn't any need to preserve them ... of course, we
@@ -211,3 +212,31 @@ inTwos list =
     in
         List.reverse <|
             step list []
+
+
+-- Routing (New API)
+
+delta2builder : Model -> Model -> Maybe Builder
+delta2builder previous current =
+    let
+        path =
+            current.gifList
+                |> List.filterMap (snd >> RandomGif.encodeLocation)
+                |> List.concat
+
+    in
+        builder
+            |> replacePath path
+            |> Just
+
+
+builder2messages : Builder -> List Action
+builder2messages builder =
+    [ Set <|
+        List.map (\(topic, url) ->
+            if url == ""
+                then (topic, Nothing)
+                else (topic, Just url)
+        )
+        (inTwos (path builder))
+    ]

@@ -5,6 +5,7 @@ import Html.Attributes exposing (..)
 import Html.App exposing (map)
 import Example8.SpinSquare as SpinSquare
 import RouteHash exposing (HashUpdate)
+import RouteUrl.Builder as Builder exposing (Builder, builder, insertQuery, getQuery)
 
 
 -- MODEL
@@ -89,6 +90,7 @@ title = "Pair of spinning squares"
 
 -- Routing
 
+-- Old `RouteHash` API
 delta2update : Model -> Model -> Maybe HashUpdate
 delta2update previous current =
     let
@@ -107,6 +109,7 @@ delta2update previous current =
         )
 
 
+-- Old `RouteHash` API
 location2action : List String -> List Action
 location2action list =
     case list of
@@ -118,3 +121,52 @@ location2action list =
 
         _ ->
             []
+
+
+-- New `RouteUrl` API
+delta2builder : Model -> Model -> Maybe Builder
+delta2builder previous current =
+    let
+        left : Maybe String
+        left =
+            SpinSquare.delta2update current.left
+
+        right : Maybe String
+        right =
+            SpinSquare.delta2update current.right
+
+    in
+        left `Maybe.andThen` (\l ->
+            right `Maybe.andThen` (\r ->
+                -- Since we can, why not use the query parameters?
+                Just (
+                    builder
+                    |> insertQuery "left" l
+                    |> insertQuery "right" r
+                )
+            )
+        )
+
+
+-- New `RouteUrl` API
+builder2messages : Builder -> List Action
+builder2messages builder =
+    -- Remember that you can parse as you like ... this is just
+    -- an example, and there are better ways.
+    let
+        left =
+            getQuery "left" builder
+
+        right =
+            getQuery "right" builder
+
+    in
+        case (left, right) of
+            (Just l, Just r) ->
+                List.filterMap identity
+                    [ Maybe.map Left <| SpinSquare.location2action l
+                    , Maybe.map Right <| SpinSquare.location2action r
+                    ]
+
+            _ ->
+                []

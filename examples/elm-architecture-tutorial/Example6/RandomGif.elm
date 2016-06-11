@@ -7,7 +7,7 @@ import Http
 import Json.Decode as Json
 import Task
 import RouteHash exposing (HashUpdate)
-
+import RouteUrl.Builder exposing (Builder, builder, appendToPath)
 
 -- MODEL
 
@@ -155,6 +155,20 @@ delta2update previous current =
 
         else
             Just (RouteHash.set [current.gifUrl])
+
+
+delta2builder : Model -> Model -> Maybe Builder
+delta2builder previous current =
+    if current.gifUrl == "assets/waiting.gif" 
+        then
+            -- If we're waiting for the first random gif, don't generate an entry ...
+            -- wait for the gif to arrive.
+            Nothing
+
+        else
+            builder
+            |> appendToPath [current.gifUrl]
+            |> Just
 
 
 location2action : List String -> List Action

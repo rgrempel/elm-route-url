@@ -5,6 +5,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import RouteHash exposing (HashUpdate)
+import RouteUrl.Builder exposing (Builder, builder, path, replacePath)
 import Result.Extra
 import String
 
@@ -97,7 +98,7 @@ title : String
 title = "List of Counters (individually removable)"
 
 
--- Routing
+-- Routing (Old API)
 
 -- You could do this in a variety of ways. We'll ignore the ID's, and just
 -- encode the value of each Counter in the list -- so we'll end up with
@@ -118,6 +119,34 @@ location2action list =
     let
         result =
             List.map String.toInt list
+                |> Result.Extra.combine
+
+    in
+        case result of
+            Ok ints ->
+                [ Set ints ]
+
+            Err _ ->
+                []
+
+
+-- Routing (New API)
+
+delta2builder : Model -> Model -> Maybe Builder
+delta2builder previous current =
+    -- We'll take advantage of the fact that we know that the counter
+    -- is just an Int ... no need to be super-modular here.
+    builder
+    |> replacePath (List.map (toString << snd) current.counters)
+    |> Just
+
+
+builder2messages : Builder -> List Action
+builder2messages builder =
+    let
+        result =
+            path builder
+                |> List.map String.toInt
                 |> Result.Extra.combine
 
     in

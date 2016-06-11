@@ -4,6 +4,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.App exposing (map)
 import RouteHash exposing (HashUpdate)
+import RouteUrl.Builder exposing (Builder, path, appendToPath)
 
 import Example6.RandomGif as RandomGif
 
@@ -79,7 +80,7 @@ title : String
 title = "Pair of Random Gifs"
 
 
--- Routing
+-- Routing (Old API)
 
 delta2update : Model -> Model -> Maybe HashUpdate
 delta2update previous current =
@@ -111,6 +112,42 @@ location2action list =
     -- list with one element ... otherwise, we'd have to do something more
     -- complex.
     case list of
+        left :: right :: rest ->
+            List.concat
+                [ List.map Left <| RandomGif.location2action [left]
+                , List.map Right <| RandomGif.location2action [right]
+                ]
+
+        _ ->
+            []
+
+
+-- Routing (New API)
+
+delta2builder : Model -> Model -> Maybe Builder
+delta2builder previous current =
+    let
+        left =
+            RandomGif.delta2builder previous.left current.left
+
+        right =
+            RandomGif.delta2builder previous.right current.right
+
+    in
+        -- Essentially, we want to combine left and right.
+        left `Maybe.andThen` (\l ->
+            right `Maybe.andThen` (\r ->
+                Just <| appendToPath (path r) l
+            )
+        )
+
+
+builder2messages : Builder -> List Action
+builder2messages builder =
+    -- This is simplified because we know that each sub-module will supply a
+    -- list with one element ... otherwise, we'd have to do something more
+    -- complex.
+    case path builder of
         left :: right :: rest ->
             List.concat
                 [ List.map Left <| RandomGif.location2action [left]

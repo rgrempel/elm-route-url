@@ -7,6 +7,7 @@ import Http
 import Json.Decode as Json
 import Task
 import RouteHash exposing (HashUpdate)
+import RouteUrl.Builder exposing (Builder, builder, path, replacePath)
 
 
 -- MODEL
@@ -152,7 +153,7 @@ title : String
 title = "Random Gif"
 
 
--- Routing
+-- Routing (Old API)
 
 -- We'll generate URLs like "/gifUrl"
 delta2update : Model -> Model -> Maybe HashUpdate
@@ -170,6 +171,34 @@ delta2update previous current =
 location2action : List String -> List Action
 location2action list =
     case list of
+        -- If we have a gifUrl, then use it
+        gifUrl :: rest ->
+            [ NewGifFromLocation gifUrl ]
+
+        -- Otherwise, do nothing
+        _ ->
+            []
+
+
+-- Routing (New API)
+
+delta2builder : Model -> Model -> Maybe Builder
+delta2builder previous current =
+    if current.gifUrl == (fst init).gifUrl
+        then
+            -- If we're waiting for the first random gif, don't generate an entry ...
+            -- wait for the gif to arrive.
+            Nothing
+
+        else
+            builder
+            |> replacePath [current.gifUrl]
+            |> Just
+
+
+builder2messages : Builder -> List Action
+builder2messages builder =
+    case path builder of
         -- If we have a gifUrl, then use it
         gifUrl :: rest ->
             [ NewGifFromLocation gifUrl ]

@@ -4,6 +4,7 @@ import Html exposing (..)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
 import RouteHash exposing (HashUpdate)
+import RouteUrl.Builder exposing (Builder, builder, path, replacePath)
 import String exposing (toInt)
 
 
@@ -65,7 +66,7 @@ title : String
 title = "Counter"
 
 
--- Routing
+-- Routing (Old API)
 
 -- For delta2update, we provide our state as the value for the URL
 delta2update : Model -> Model -> Maybe HashUpdate
@@ -78,6 +79,33 @@ delta2update previous current =
 location2action : List String -> List Action
 location2action list =
     case list of
+        first :: rest ->
+            case toInt first of
+                Ok value ->
+                    [ Set value ]
+
+                Err _ ->
+                    -- If it wasn't an integer, then no action ... we could
+                    -- show an error instead, of course.
+                    []
+
+        _ ->
+            -- If nothing provided for this part of the URL, return empty list
+            []
+
+
+-- Routing (New API)
+
+delta2builder : Model -> Model -> Maybe Builder
+delta2builder previous current =
+    builder
+    |> replacePath [toString current]
+    |> Just
+
+
+builder2messages : Builder -> List Action
+builder2messages builder =
+    case path builder of
         first :: rest ->
             case toInt first of
                 Ok value ->

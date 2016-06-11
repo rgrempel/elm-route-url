@@ -1,4 +1,9 @@
-module Example2.Counter exposing (Model, init, Action, update, view, delta2update, location2action)
+module Example2.Counter exposing
+    ( Model, init
+    , Action, update, view
+    , delta2update, location2action
+    , delta2fragment, fragment2messages
+    )
 
 import Html exposing (..)
 import Html.Attributes exposing (style)
@@ -56,7 +61,7 @@ countStyle =
     ]
 
 
--- Routing
+-- Routing (Old API)
 
 -- For delta2update, we provide our state as the value for the URL
 delta2update : Model -> Model -> Maybe HashUpdate
@@ -80,4 +85,23 @@ location2action list =
 
         _ ->
             -- If nothing provided for this part of the URL, return empty list 
+            []
+
+
+-- Routing (New API)
+
+-- We'll just send back a string
+delta2fragment : Model -> Model -> String
+delta2fragment previous current =
+    toString current
+
+
+-- We'll just take a string
+fragment2messages : String -> List Action
+fragment2messages fragment =
+    case toInt fragment of
+        Ok value ->
+            [ Set value ]
+
+        Err _ ->
             []
