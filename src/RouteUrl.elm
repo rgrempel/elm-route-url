@@ -17,7 +17,7 @@ It is, of course, possible to do something like this using the official
 [`Navigation`](http://package.elm-lang.org/packages/elm-lang/navigation/latest)
 module by itself, and you might well want to try that. For a discussion of the
 differences between the official module and this one, see the [package documentation]
-(http://package.elm-lang.org/packages/rgrempel/elm-route-hash/latest).
+(http://package.elm-lang.org/packages/rgrempel/elm-route-url/latest).
 
 # Configuration
 
@@ -60,7 +60,7 @@ import Dict
 
 -- THINGS CLIENTS PROVIDE
 
-{-| The configuration whih you need to use this module.
+{-| The configuration required to use this module to create a `Program`.
 
 The `init`, `update`, `subscriptions` and `view` fields have the same meaning
 as they do in [`Html.App.program`](http://package.elm-lang.org/packages/elm-lang/html/1.0.0/Html-App#program)
@@ -78,19 +78,19 @@ So, the "special" fields are the `delta2url` function and the
   so you need not worry about setting duplicate URLs -- that will be
   automatically avoided.
 
-  The reason we provide both the old and new model for your consideration is
-  that sometimes you may want to do something differently depending on the
-  nature of the change in the model, not just the new value. For instance, it
-  might make the difference between using `NewEntry` or `ModifyEntry` to make the
-  change.
+  The reason we provide both the previous and current model for your
+  consideration is that sometimes you may want to do something differently
+  depending on the nature of the change in the model, not just the new value.
+  For instance, it might make the difference between using `NewEntry` or
+  `ModifyEntry` to make the change.
 
   Note that this function will *not* be called when processing messages
   returned from your `location2messages` function, since in that case the
   URL has already been set.
 
-  If you are familiar with version 1.x of elm-route-hash, this is analogous
-  to the old `delta2update` function -- just renamed to reflect the fact
-  that you can change the whole URL now, not just the hash.
+  If you are familiar with elm-route-hash, `delta2url` is analogous to the old
+  `delta2update` function -- just renamed to reflect the fact that you can
+  change the whole URL now, not just the hash.
 
 * `location2messages` will be called when a change in the browser's URL is
   detected, either because the user followed a link, typed something in the
@@ -104,8 +104,8 @@ So, the "special" fields are the `delta2url` function and the
   can respond to. Those messages will be fed into your app, to produce the
   changes to the model that the new URL implies.
 
-  If you are familiar with version 1.x of elm-route-hash, this is analogous
-  to the old `location2actions` function -- just renamed to reflected the
+  If you are familiar with elm-route-hash, `location2messages` is analogous to
+  the old `location2actions` function -- just renamed to reflected the
   terminology change from `action` to `msg` in Elm 0.17.
 -}
 type alias App model msg =
@@ -174,6 +174,9 @@ So, what you should *not* provide is the scheme, host, or authentication
 method -- that is, no "http://elm-lang.org". You should also not use relative
 URLs. (Let me know if you'd like relative URLs -- we might be able to do
 something sensible with them, but we don't yet in this version).
+
+One way to construct a `UrlChange` in a modular way is to use the
+`RouteUrl.Builder` module. However, a variety of approaches are possible.
 -}
 type alias UrlChange =
     { entry : HistoryEntry
@@ -184,7 +187,7 @@ type alias UrlChange =
 {-| Indicates whether to create a new entry in the browser's history, or merely
 modify the current entry.
 
-I suppose we could have used a `Bool` for this, but I hate remembering what
+One could have used a `Bool` for this instead, but I hate remembering what
 `True` actually means.
 -}
 type HistoryEntry
@@ -269,8 +272,8 @@ navigationAppWithFlags app =
 
 
 {-| Turns the output from [`navigationApp`](#navigationApp)
-or [`navigationAppWithFlags`](#navigationAppWithFlags) into a
-`Program` that you can assign to your `main` function.
+or [`navigationAppWithFlags`](#navigationAppWithFlags) into a `Program` that
+you can assign to your `main` function.
 
 For convenience, you will usually want to just use [`program`](#program) or
 [`programWithFlags`](#programWithFlags), which go directly from the required
@@ -296,7 +299,7 @@ program : App model msg -> Program Never
 program = runNavigationApp << navigationApp
 
 
-{-| Turns your configuration into a `Program` that you can assign to your
+{-| Turns your configuration into a `Program flags` that you can assign to your
 `main` function.
 -}
 programWithFlags : AppWithFlags model msg flags -> Program flags
@@ -440,7 +443,8 @@ normalizeUrl : Url -> UrlChange -> UrlChange
 normalizeUrl old change =
     mapUrl (
         if startsWith "?" change.url
-            then \url -> url2path old ++ url
+            then
+                \url -> url2path old ++ url
             else
                 if startsWith "#" change.url
                     then \url -> url2path old ++ Erl.queryToString old ++ url

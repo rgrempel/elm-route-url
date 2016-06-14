@@ -8,16 +8,30 @@ module RouteUrl.Builder exposing
     )
 
 
-{-| This module provides a type which you can use to build up a `UrlChange`.
-Ultimately, a `UrlChange` just requires a `String`, so you don't need to use
-this module at all. However, it can be a convenience.
+{-| This module provides a type which you can use to help construct a
+`UrlChange` or parse a `Location`.
 
-Note that you should not uri-encode anything provided to this module.  That
+However, the `Builder` type is not really the focus of elm-route-url.
+
+* Ultimately, a `UrlChange` just requires a `String` -- you don't need to
+  use this module to construct one.
+
+* You also don't need to use this module to parse a `Location` -- there are a
+  fair number of relevant packages for that, including:
+
+    * [evancz/url-parser](http://package.elm-lang.org/packages/evancz/url-parser/latest)
+    * [Bogdanp/elm-combine](http://package.elm-lang.org/packages/Bogdanp/elm-combine/latest)
+    * [Bogdanp/elm-route](http://package.elm-lang.org/packages/Bogdanp/elm-route/latest)
+    * [etaque/elm-route-parser](http://package.elm-lang.org/packages/etaque/elm-route-parser/latest)
+    * [poyang/elm-router](http://package.elm-lang.org/packages/poying/elm-router/latest)
+    * [sporto/erl](http://package.elm-lang.org/packages/sporto/erl/latest)
+    * [sporto/hop](http://package.elm-lang.org/packages/sporto/hop/latest)
+
+So, this module is potentially useful, but there are quite a few other
+options you may wish to investigate.
+
+Note that you should not uri-encode anything provided to this module. That
 will be done for you.
-
-In principle, what this is trying to facilitate is a form of serialization, I
-suppose. It is not particularly sophisticated, so you may well want to try
-something better.
 
 # Initialization
 
@@ -56,15 +70,11 @@ import Erl
 
 -- THE TYPE
 
-{-| An opaque type which helps to build up a URL for a `URLChange`.
+{-| An opaque type which helps to build up a URL for a `URLChange`,
+or parse a `Location`.
 
-Start with `builder`, and then use other functions to make changes.
-
-    url : Builder
-    url =
-        builder
-        |> newEntry
-        |> appendPath ["home"]
+Start with [`builder`](#builder), and then use other functions to make changes.
+Or, if you have a URL, start with [`fromUrl`](#fromUrl) or [`fromHash`](#fromHash).
 -}
 type Builder = Builder
     { entry : HistoryEntry
@@ -76,6 +86,12 @@ type Builder = Builder
 
 {-| Creates a default `Builder`. Start with this, then use other methods
 to build up the URL.
+
+    url : Builder
+    url =
+        builder
+        |> newEntry
+        |> appendPath ["home"]
 -}
 builder : Builder
 builder =
@@ -89,8 +105,8 @@ builder =
 
 -- ENTRY
 
-{-| Indicates whether the `Builder` will make a new entry in the browser's history,
-or merely modify the current entry.
+{-| Indicates whether the `Builder` will make a new entry in the browser's
+history, or merely modify the current entry.
 -}
 entry : Builder -> HistoryEntry
 entry (Builder builder) =
@@ -265,7 +281,8 @@ toUrlChange = toChange False
 {-| Like `toUrlChange`, but puts everything into the hash, prepended by "#!".
 
 If your `Builder` has a hash component, we'll use '$' instead of '#' to
-delimit the embedded hash.
+delimit the embedded hash. And, we will use '^' instead of '?' to begin
+the query parameters.
 -}
 toHashChange : Builder -> UrlChange
 toHashChange = toChange True
@@ -292,33 +309,29 @@ fromUrl url =
 
 * Assumes that the hash starts with "#!/".
 
-* Assumes that any embedded hash is delimited with a '$'.
+* Assumes that any embedded hash is delimited with a '$' instead of a '#'.
+
+* Assumes that any embedded query parameters being with a '^' instead of
+  a '?'.
 
 -}
 fromHash : String -> Builder
 fromHash url =
     let
-        outer =
+        unwrapped =
             Erl.parse url
-
-        stripInitial =
-            replace (AtMost 1) (regex "^!") (always "") outer.hash
-
-        convertSubhash =
-            replace (AtMost 1) (regex "$") (always "#") stripInitial
-
-        convertQuery =
-            replace (AtMost 1) (regex "\\^") (always "?") convertSubhash
-
-        inner =
-            Erl.parse convertQuery
+            |> .hash
+            |> replace (AtMost 1) (regex "^!") (always "")
+            |> replace (AtMost 1) (regex "$") (always "#")
+            |> replace (AtMost 1) (regex "\\^") (always "?")
+            |> Erl.parse
 
     in
         Builder
             { entry = NewEntry
-            , path = inner.path
-            , query = inner.query
-            , hash = inner.hash
+            , path = unwrapped.path
+            , query = unwrapped.query
+            , hash = unwrapped.hash
             }
 
 

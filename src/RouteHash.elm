@@ -6,8 +6,21 @@ module RouteHash exposing
     )
 
 
-{-| This module implements the elm-route-hash 1.x API as closely as possible,
-given the changes required for elm-route-hash 2.0.
+{-| This module implements the old elm-route-hash API as closely as possible,
+given the changes required for elm-route-url.
+
+To transition from elm-route-hash to elm-route-url, you should be able to
+use your existing `delta2update` and `location2action` functions without
+changes. The only required changes are in your `Main` module.
+
+Essentially, instead of using the old `start` method and sending the resulting
+signal to a port, you would now use [`program`](#program) or
+[`programWithFlags`](#programWithFlags), and assign the resulting `Program`
+to your `main` function.
+
+At your leisure, you should transition to the new `RouteUrl` API, which allows
+you to use the whole URL (rather than just the hash), since this old API will
+be removed in a future version of elm-route-url.
 
 # Configuration
 
@@ -24,6 +37,7 @@ given the changes required for elm-route-hash 2.0.
 # Complicated Initialization (usually not needed)
 
 @docs app, appWithFlags
+
 -}
 
 
@@ -202,7 +216,7 @@ type alias Config model msg =
     }
 
 
-{-| Like `Config`, but with flags. -}
+{-| Like [`Config`](#Config), but with flags. -}
 type alias ConfigWithFlags model msg flags =
     { prefix : String
     , delta2update : model -> model -> Maybe HashUpdate
@@ -267,7 +281,7 @@ program : Config model msg -> Program Never
 program = runNavigationApp << RouteUrl.navigationAppWithFlags << app
 
 
-{-| Takes your configuration, and turns it into a `Program` that can be
+{-| Takes your configuration, and turns it into a `Program flags` that can be
 used in your `main` function.
 -}
 programWithFlags : ConfigWithFlags model msg flags -> Program flags
