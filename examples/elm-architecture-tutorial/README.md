@@ -66,13 +66,19 @@ illustrate how to do multiple layers of state anyway, just so you can see how.
 I hope that helps get you started.
 
 
-## Running the code on your own
+## Running the code
 
-I've actually implemented three schemes in the example:
+Here are links to three variations that you can try out live.
 
-* the old API from elm-route-hash (`MainWithOldAPI.elm`)
-* the new API, using the full URL (`MainWithFullUrl.elm`)
-* the new API, using the hash only (`MainWithJustHash.elm`)
+* the [old API](http://rgrempel.github.io/elm-route-hash/examples/elm-architecture-tutorial/old-api.html) from elm-route-hash (`MainWithOldAPI.elm`)
+* the new API, using the [full URL](http://rgrempel.github.io/elm-route-hash/examples/elm-architecture-tutorial/full-url.html) (`MainWithFullUrl.elm`)
+* the new API, using the [hash only](http://rgrempel.github.io/elm-route-hash/examples/elm-architecture-tutorial/just-hash.html) (`MainWithJustHash.elm`)
 
-If you start up `elm-reactor`, you should be able to click on your choice
-of `Main` implementation to see each example.
+To run the code locally instead, start up `elm-reactor` in this directory. You
+can then click on one of the .elm files mentioned above to see that variation
+of the example.
+
+Note that reloading and bookmarking doesn't work with the "full URL" example,
+because that requires server-side support that I haven't implemented for
+the example. (That is, you'd have to adopt a scheme for the full URLs so that
+the server knows what actual page to send).
