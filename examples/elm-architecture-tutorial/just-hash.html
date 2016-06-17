@@ -12112,20 +12112,30 @@ var _rgrempel$elm_route_hash$Example8_SpinSquare$delta2update = function (curren
 		_elm_lang$core$Basics$toString(current.angle)) : _elm_lang$core$Maybe$Nothing;
 };
 var _rgrempel$elm_route_hash$Example8_SpinSquare$duration = _elm_lang$core$Time$second;
+var _rgrempel$elm_route_hash$Example8_SpinSquare$toOffset = function (animationState) {
+	var _p0 = animationState;
+	if (_p0.ctor === 'Nothing') {
+		return 0;
+	} else {
+		var _p1 = _p0._0;
+		return _elm_community$easing_functions$Ease$outBounce(_p1.elapsedTime / _rgrempel$elm_route_hash$Example8_SpinSquare$duration) * _p1.step;
+	}
+};
 var _rgrempel$elm_route_hash$Example8_SpinSquare$rotateStep = 90;
 var _rgrempel$elm_route_hash$Example8_SpinSquare$update = F2(
 	function (msg, model) {
-		var _p0 = msg;
-		switch (_p0.ctor) {
+		var _p2 = msg;
+		switch (_p2.ctor) {
 			case 'Spin':
-				var _p1 = model.animationState;
-				if (_p1.ctor === 'Nothing') {
+				var _p3 = model.animationState;
+				if (_p3.ctor === 'Nothing') {
 					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{
-								animationState: _elm_lang$core$Maybe$Just(0)
+								animationState: _elm_lang$core$Maybe$Just(
+									{elapsedTime: 0, step: _rgrempel$elm_route_hash$Example8_SpinSquare$rotateStep})
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
@@ -12133,42 +12143,41 @@ var _rgrempel$elm_route_hash$Example8_SpinSquare$update = F2(
 					return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 				}
 			case 'Tick':
-				var newElapsedTime = function () {
-					var _p2 = model.animationState;
-					if (_p2.ctor === 'Nothing') {
-						return 0;
-					} else {
-						return _p2._0 + _p0._0;
-					}
-				}();
-				return (_elm_lang$core$Native_Utils.cmp(newElapsedTime, _rgrempel$elm_route_hash$Example8_SpinSquare$duration) > 0) ? {
-					ctor: '_Tuple2',
-					_0: {angle: model.angle + _rgrempel$elm_route_hash$Example8_SpinSquare$rotateStep, animationState: _elm_lang$core$Maybe$Nothing},
-					_1: _elm_lang$core$Platform_Cmd$none
-				} : {
-					ctor: '_Tuple2',
-					_0: {
-						angle: model.angle,
-						animationState: _elm_lang$core$Maybe$Just(newElapsedTime)
-					},
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
+				var _p4 = model.animationState;
+				if (_p4.ctor === 'Nothing') {
+					return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
+				} else {
+					var _p5 = _p4._0;
+					var newElapsedTime = _p5.elapsedTime + _p2._0;
+					return (_elm_lang$core$Native_Utils.cmp(newElapsedTime, _rgrempel$elm_route_hash$Example8_SpinSquare$duration) > 0) ? {
+						ctor: '_Tuple2',
+						_0: {angle: model.angle + _p5.step, animationState: _elm_lang$core$Maybe$Nothing},
+						_1: _elm_lang$core$Platform_Cmd$none
+					} : {
+						ctor: '_Tuple2',
+						_0: {
+							angle: model.angle,
+							animationState: _elm_lang$core$Maybe$Just(
+								_elm_lang$core$Native_Utils.update(
+									_p5,
+									{elapsedTime: newElapsedTime}))
+						},
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				}
 			default:
 				return {
 					ctor: '_Tuple2',
-					_0: {angle: _p0._0, animationState: _elm_lang$core$Maybe$Nothing},
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							animationState: _elm_lang$core$Maybe$Just(
+								{elapsedTime: 0, step: _p2._0 - model.angle})
+						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 		}
 	});
-var _rgrempel$elm_route_hash$Example8_SpinSquare$toOffset = function (animationState) {
-	var _p3 = animationState;
-	if (_p3.ctor === 'Nothing') {
-		return 0;
-	} else {
-		return _elm_community$easing_functions$Ease$outBounce(_p3._0 / _rgrempel$elm_route_hash$Example8_SpinSquare$duration) * _rgrempel$elm_route_hash$Example8_SpinSquare$rotateStep;
-	}
-};
 var _rgrempel$elm_route_hash$Example8_SpinSquare$init = {
 	ctor: '_Tuple2',
 	_0: {angle: 0, animationState: _elm_lang$core$Maybe$Nothing},
@@ -12177,6 +12186,10 @@ var _rgrempel$elm_route_hash$Example8_SpinSquare$init = {
 var _rgrempel$elm_route_hash$Example8_SpinSquare$Model = F2(
 	function (a, b) {
 		return {angle: a, animationState: b};
+	});
+var _rgrempel$elm_route_hash$Example8_SpinSquare$AnimationState = F2(
+	function (a, b) {
+		return {elapsedTime: a, step: b};
 	});
 var _rgrempel$elm_route_hash$Example8_SpinSquare$SetAngle = function (a) {
 	return {ctor: 'SetAngle', _0: a};
@@ -12192,8 +12205,8 @@ var _rgrempel$elm_route_hash$Example8_SpinSquare$Tick = function (a) {
 	return {ctor: 'Tick', _0: a};
 };
 var _rgrempel$elm_route_hash$Example8_SpinSquare$subscriptions = function (model) {
-	var _p4 = model.animationState;
-	if (_p4.ctor === 'Just') {
+	var _p6 = model.animationState;
+	if (_p6.ctor === 'Just') {
 		return _elm_lang$animation_frame$AnimationFrame$diffs(_rgrempel$elm_route_hash$Example8_SpinSquare$Tick);
 	} else {
 		return _elm_lang$core$Platform_Sub$none;
