@@ -16,7 +16,13 @@ import String
 
 type alias Model =
     { angle : Float
-    , animationState : Maybe Time
+    , animationState : Maybe AnimationState
+    }
+
+
+type alias AnimationState =
+    { elapsedTime : Time
+    , step : Float
     }
 
 
@@ -56,7 +62,12 @@ update msg model =
     Spin ->
       case model.animationState of
         Nothing ->
-          ( { model | animationState = Just 0 }
+          ( { model |
+                animationState = Just
+                    { elapsedTime = 0
+                    , step = rotateStep
+                    }
+            }
           , Cmd.none
           )
 
@@ -64,32 +75,40 @@ update msg model =
           ( model, Cmd.none )
 
     Tick diff ->
-      let
-        newElapsedTime =
-          case model.animationState of
+        case model.animationState of
             Nothing ->
-              0
+                -- We weren't expecting a tick, so this is just a stray
+                (model, Cmd.none)
 
-            Just elapsedTime ->
-              elapsedTime + diff
+            Just animation ->
+                let
+                    newElapsedTime =
+                        animation.elapsedTime + diff
 
-      in
-        if newElapsedTime > duration then
-          ( { angle = model.angle + rotateStep
-            , animationState = Nothing
-            }
-          , Cmd.none
-          )
-        else
-          ( { angle = model.angle
-            , animationState = Just newElapsedTime
-            }
-          , Cmd.none
-          )
+                in
+                    if newElapsedTime > duration then
+                        -- The animation is finished, so actually update the
+                        -- model by changing the angle.
+                        ( { angle = model.angle + animation.step
+                          , animationState = Nothing
+                          }
+                        , Cmd.none
+                        )
+                    else
+                        -- We're still animating, so update the time and let
+                        -- the view take care of drawing.
+                        ( { angle = model.angle
+                          , animationState = Just { animation | elapsedTime = newElapsedTime }
+                          }
+                        , Cmd.none
+                        )
 
     SetAngle angle ->
-        ( { angle = angle
-          , animationState = Nothing
+        ( { model |
+                animationState = Just
+                    { elapsedTime = 0
+                    , step = angle - model.angle
+                    }
           }
         , Cmd.none
         )
@@ -97,14 +116,14 @@ update msg model =
 
 -- VIEW
 
-toOffset : Maybe Time -> Float
+toOffset : Maybe AnimationState -> Float
 toOffset animationState =
   case animationState of
     Nothing ->
       0
 
-    Just elapsedTime ->
-      (outBounce (elapsedTime / duration)) * rotateStep
+    Just animation ->
+      (outBounce (animation.elapsedTime / duration)) * animation.step
 
 
 view : Model -> Html Action
