@@ -70,9 +70,9 @@ I hope that helps get you started.
 
 Here are links to three variations that you can try out live.
 
-* the [old API](http://rgrempel.github.io/elm-route-hash/examples/elm-architecture-tutorial/old-api.html) from elm-route-hash (`MainWithOldAPI.elm`)
-* the new API, using the [full URL](http://rgrempel.github.io/elm-route-hash/examples/elm-architecture-tutorial/full-url.html) (`MainWithFullUrl.elm`)
-* the new API, using the [hash only](http://rgrempel.github.io/elm-route-hash/examples/elm-architecture-tutorial/just-hash.html) (`MainWithJustHash.elm`)
+* the [old API](http://rgrempel.github.io/elm-route-url/examples/elm-architecture-tutorial/old-api.html) from elm-route-hash (`MainWithOldAPI.elm`)
+* the new API, using the [full URL](http://rgrempel.github.io/elm-route-url/examples/elm-architecture-tutorial/full-url.html) (`MainWithFullUrl.elm`)
+* the new API, using the [hash only](http://rgrempel.github.io/elm-route-url/examples/elm-architecture-tutorial/just-hash.html) (`MainWithJustHash.elm`)
 
 To run the code locally instead, start up `elm-reactor` in this directory. You
 can then click on one of the .elm files mentioned above to see that variation
