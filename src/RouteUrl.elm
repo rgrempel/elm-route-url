@@ -433,7 +433,7 @@ url2path : Url -> String
 url2path url =
     "/" ++
     (String.join "/" url.path) ++
-    if url.hasTrailingSlash
+    if url.hasTrailingSlash && not (List.isEmpty url.path)
         then "/"
         else ""
 
