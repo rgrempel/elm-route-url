@@ -1,8 +1,8 @@
 # elm-route-url
 
 This is a module for routing single-page-apps in Elm, building on the
-[navigation](http://package.elm-lang.org/packages/elm-lang/navigation/latest)
-package. It is the successor to elm-route-hash,
+[`elm-lang/navigation`](http://package.elm-lang.org/packages/elm-lang/navigation/latest)
+package. It is the successor to elm-route-hash:
 
 * now compatible with Elm 0.17, and
 
@@ -22,9 +22,9 @@ So, there are two things going on here:
 * Mapping changes in our app's state to changes in the browser's location.
 * Mapping changes in the browser's location to changes in our app's state.
 
-Now, you can already arrange for these things to happen using the official
-[navigation](http://package.elm-lang.org/packages/elm-lang/navigation/latest)
-package. Furthermore, there are already a wealth of complementary packages,
+Now, you can already arrange for these things to happen using
+[`elm-lang/navigation`](http://package.elm-lang.org/packages/elm-lang/navigation/latest).
+Furthermore, there are already a wealth of complementary packages,
 such as:
 
 * [evancz/url-parser](http://package.elm-lang.org/packages/evancz/url-parser/latest)
@@ -40,8 +40,8 @@ So, what does elm-route-url do differently than the others?
 
 ### Mapping changes in the app state to a possible location change
 
-If you were using the official [navigation](http://package.elm-lang.org/packages/elm-lang/navigation/latest)
-package directly, then you would make changes to the URL with ordinary commands.
+If you were using [`elm-lang/navigation`](http://package.elm-lang.org/packages/elm-lang/navigation/latest)
+directly, then you would make changes to the URL with ordinary commands.
 So, as you write your `update` function, you would possibly return a command,
 using [`modifyUrl`](http://package.elm-lang.org/packages/elm-lang/navigation/1.0.0/Navigation#modifyUrl)
 or [`newUrl`](http://package.elm-lang.org/packages/elm-lang/navigation/1.0.0/Navigation#newUrl).

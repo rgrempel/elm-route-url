@@ -13,15 +13,15 @@ changes in the browser's location. The net effect is to make it possible for
 the 'back' and 'forward' buttons in the browser to do useful things, and for
 the state of your app to be partially bookmark-able.
 
-It is, of course, possible to do something like this using the official
-[`Navigation`](http://package.elm-lang.org/packages/elm-lang/navigation/latest)
-module by itself, and you might well want to try that. For a discussion of the
+It is, of course, possible to do something like this using
+[`elm-lang/navigation`](http://package.elm-lang.org/packages/elm-lang/navigation/latest)
+by itself. For a discussion of the
 differences between the official module and this one, see the [package documentation]
 (http://package.elm-lang.org/packages/rgrempel/elm-route-url/latest).
 
 # Configuration
 
-You configure this module by providing the functions set out in [`App`](#App] or
+You configure this module by providing the functions set out in [`App`](#App) or
 [`AppWithFlags`](#AppWithFlags), depending on what kind of `init` function you
 want to use.
 
@@ -64,7 +64,7 @@ import Dict
 
 The `init`, `update`, `subscriptions` and `view` fields have the same meaning
 as they do in [`Html.App.program`](http://package.elm-lang.org/packages/elm-lang/html/1.0.0/Html-App#program)
-... that is, you should provide what you normally provide to that function.
+-- that is, you should provide what you normally provide to that function.
 
 So, the "special" fields are the `delta2url` function and the
 `location2messages` function.
@@ -123,7 +123,7 @@ type alias App model msg =
 The `init`, `update`, `subscriptions` and `view` fields have the same meaning
 as they do in
 [`Html.App.programWithFlags`](http://package.elm-lang.org/packages/elm-lang/html/1.0.0/Html-App#program)
-... that is, you should provide what you normally provide to that function.
+-- that is, you should provide what you normally provide to that function.
 
 So, the special functions are `delta2url` and `location2messages`,
 which are described above, under [`App`](#App).

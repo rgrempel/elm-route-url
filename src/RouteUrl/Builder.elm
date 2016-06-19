@@ -91,7 +91,7 @@ to build up the URL.
     url =
         builder
         |> newEntry
-        |> appendPath ["home"]
+        |> appendToPath ["home"]
 -}
 builder : Builder
 builder =
@@ -278,7 +278,7 @@ toUrlChange : Builder -> UrlChange
 toUrlChange = toChange False
 
 
-{-| Like `toUrlChange`, but puts everything into the hash, prepended by "#!".
+{-| Like [`toUrlChange`](#toUrlChange), but puts everything into the hash, prepended by "#!".
 
 If your `Builder` has a hash component, we'll use '$' instead of '#' to
 delimit the embedded hash. And, we will use '^' instead of '?' to begin
