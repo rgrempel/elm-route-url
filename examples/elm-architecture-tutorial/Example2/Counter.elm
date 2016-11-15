@@ -1,9 +1,15 @@
-module Example2.Counter exposing
-    ( Model, init
-    , Action, update, view
-    , delta2update, location2action
-    , delta2fragment, fragment2messages
-    )
+module Example2.Counter
+    exposing
+        ( Model
+        , init
+        , Action
+        , update
+        , view
+        , delta2update
+        , location2action
+        , delta2fragment
+        , fragment2messages
+        )
 
 import Html exposing (..)
 import Html.Attributes exposing (style)
@@ -14,17 +20,22 @@ import String exposing (toInt)
 
 -- MODEL
 
-type alias Model = Int
+
+type alias Model =
+    Int
 
 
 init : Int -> Model
-init count = count
+init count =
+    count
+
 
 
 -- UPDATE
-
 -- We add a Set action for the advanced example, so that we
 -- can restore a particular bookmarked state.
+
+
 type Action
     = Increment
     | Decrement
@@ -33,44 +44,56 @@ type Action
 
 update : Action -> Model -> Model
 update action model =
-  case action of
-    Increment -> model + 1
-    Decrement -> model - 1
-    Set value -> value
+    case action of
+        Increment ->
+            model + 1
+
+        Decrement ->
+            model - 1
+
+        Set value ->
+            value
+
 
 
 -- VIEW
 
+
 view : Model -> Html Action
 view model =
-  div []
-    [ button [ onClick Decrement ] [ text "-" ]
-    , div [ countStyle ] [ text (toString model) ]
-    , button [ onClick Increment ] [ text "+" ]
-    ]
+    div []
+        [ button [ onClick Decrement ] [ text "-" ]
+        , div [ countStyle ] [ text (toString model) ]
+        , button [ onClick Increment ] [ text "+" ]
+        ]
 
 
 countStyle : Attribute any
 countStyle =
-  style
-    [ ("font-size", "20px")
-    , ("font-family", "monospace")
-    , ("display", "inline-block")
-    , ("width", "50px")
-    , ("text-align", "center")
-    ]
+    style
+        [ ( "font-size", "20px" )
+        , ( "font-family", "monospace" )
+        , ( "display", "inline-block" )
+        , ( "width", "50px" )
+        , ( "text-align", "center" )
+        ]
+
 
 
 -- Routing (Old API)
-
 -- For delta2update, we provide our state as the value for the URL
+
+
 delta2update : Model -> Model -> Maybe HashUpdate
 delta2update previous current =
     Just <|
-        RouteHash.set [toString current]
+        RouteHash.set [ toString current ]
+
 
 
 -- For location2action, we generate an action that will restore our state
+
+
 location2action : List String -> List Action
 location2action list =
     case list of
@@ -84,19 +107,24 @@ location2action list =
                     []
 
         _ ->
-            -- If nothing provided for this part of the URL, return empty list 
+            -- If nothing provided for this part of the URL, return empty list
             []
 
 
--- Routing (New API)
 
+-- Routing (New API)
 -- We'll just send back a string
+
+
 delta2fragment : Model -> Model -> String
 delta2fragment previous current =
     toString current
 
 
+
 -- We'll just take a string
+
+
 fragment2messages : String -> List Action
 fragment2messages fragment =
     case toInt fragment of

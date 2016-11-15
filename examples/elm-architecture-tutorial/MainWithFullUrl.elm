@@ -1,8 +1,10 @@
+module Main exposing (..)
+
 import ExampleViewer
 import RouteUrl
 
 
-main : Program Never
+main : Program Never (RouteUrl.Model ExampleViewer.Model) (RouteUrl.Msg ExampleViewer.Action)
 main =
     RouteUrl.program
         { delta2url = ExampleViewer.delta2url

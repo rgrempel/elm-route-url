@@ -1,12 +1,30 @@
-module RouteUrl.Builder exposing
-    ( Builder, builder
-    , entry, newEntry, modifyEntry
-    , path, modifyPath, prependToPath, appendToPath, replacePath
-    , query, modifyQuery, insertQuery, updateQuery, removeQuery, getQuery, replaceQuery
-    , hash, modifyHash, replaceHash
-    , toUrlChange, toHashChange, fromUrl, fromHash
-    )
-
+module RouteUrl.Builder
+    exposing
+        ( Builder
+        , builder
+        , entry
+        , newEntry
+        , modifyEntry
+        , path
+        , modifyPath
+        , prependToPath
+        , appendToPath
+        , replacePath
+        , query
+        , modifyQuery
+        , insertQuery
+        , updateQuery
+        , removeQuery
+        , getQuery
+        , replaceQuery
+        , hash
+        , modifyHash
+        , replaceHash
+        , toUrlChange
+        , toHashChange
+        , fromUrl
+        , fromHash
+        )
 
 {-| This module provides a type which you can use to help construct a
 `UrlChange` or parse a `Location`.
@@ -59,10 +77,9 @@ will be done for you.
 
 -}
 
-
 import RouteUrl exposing (HistoryEntry(..), UrlChange)
 import Dict exposing (Dict)
-import Http exposing (uriEncode, uriDecode)
+import Http exposing (encodeUri, decodeUri)
 import Regex exposing (HowMany(..), replace, regex)
 import String
 import Erl
@@ -70,18 +87,20 @@ import Erl
 
 -- THE TYPE
 
+
 {-| An opaque type which helps to build up a URL for a `URLChange`,
 or parse a `Location`.
 
 Start with [`builder`](#builder), and then use other functions to make changes.
 Or, if you have a URL, start with [`fromUrl`](#fromUrl) or [`fromHash`](#fromHash).
 -}
-type Builder = Builder
-    { entry : HistoryEntry
-    , path : List String
-    , query : Dict String String
-    , hash : String
-    }
+type Builder
+    = Builder
+        { entry : HistoryEntry
+        , path : List String
+        , query : Dict String String
+        , hash : String
+        }
 
 
 {-| Creates a default `Builder`. Start with this, then use other methods
@@ -103,7 +122,9 @@ builder =
         }
 
 
+
 -- ENTRY
+
 
 {-| Indicates whether the `Builder` will make a new entry in the browser's
 history, or merely modify the current entry.
@@ -113,19 +134,23 @@ entry (Builder builder) =
     builder.entry
 
 
-{-| Make a new entry in the browser's history. -}
+{-| Make a new entry in the browser's history.
+-}
 newEntry : Builder -> Builder
 newEntry (Builder builder) =
     Builder { builder | entry = NewEntry }
 
 
-{-| Modify the current entry in the browser's history. -}
+{-| Modify the current entry in the browser's history.
+-}
 modifyEntry : Builder -> Builder
 modifyEntry (Builder builder) =
     Builder { builder | entry = ModifyEntry }
 
 
+
 -- PATH
+
 
 {-| The segments of the path. The path is represented by a list of strings.
 Ultimately, they will be uri-encoded for you, and joined with a "/".
@@ -143,25 +168,30 @@ modifyPath func (Builder builder) =
     Builder { builder | path = func builder.path }
 
 
-{-| Add the provided list to the beginning of the builder's path. -}
+{-| Add the provided list to the beginning of the builder's path.
+-}
 prependToPath : List String -> Builder -> Builder
 prependToPath =
     modifyPath << List.append
 
 
-{-| Add the provided list to the end of the builder's path. -}
+{-| Add the provided list to the end of the builder's path.
+-}
 appendToPath : List String -> Builder -> Builder
 appendToPath =
     modifyPath << flip List.append
 
 
-{-| Sets the path to the provided list. -}
+{-| Sets the path to the provided list.
+-}
 replacePath : List String -> Builder -> Builder
 replacePath list (Builder builder) =
     Builder { builder | path = list }
 
 
+
 -- QUERY
+
 
 {-| The query portion of the URL. It is represented by a `Dict` of
 key/value pairs.
@@ -186,96 +216,113 @@ insertQuery key value =
     modifyQuery (Dict.insert key value)
 
 
-{-| Update a particular query key using the given function. -}
+{-| Update a particular query key using the given function.
+-}
 updateQuery : String -> (Maybe String -> Maybe String) -> Builder -> Builder
 updateQuery key func =
     modifyQuery (Dict.update key func)
 
 
-{-| Remove a query key. -}
+{-| Remove a query key.
+-}
 removeQuery : String -> Builder -> Builder
 removeQuery =
     modifyQuery << Dict.remove
 
 
-{-| Get the value for a query key. -}
+{-| Get the value for a query key.
+-}
 getQuery : String -> Builder -> Maybe String
 getQuery key (Builder builder) =
     Dict.get key builder.query
 
 
-{-| Replace the whole query with a different dictionary. -}
+{-| Replace the whole query with a different dictionary.
+-}
 replaceQuery : Dict String String -> Builder -> Builder
 replaceQuery query (Builder builder) =
     Builder { builder | query = query }
 
 
+
 -- HASH
 
-{-| Gets the hash portion of the URL, without the "#". -}
+
+{-| Gets the hash portion of the URL, without the "#".
+-}
 hash : Builder -> String
 hash (Builder builder) =
     builder.hash
 
 
-{-| Replace the hash with the result of a function applied to the current hash. -}
+{-| Replace the hash with the result of a function applied to the current hash.
+-}
 modifyHash : (String -> String) -> Builder -> Builder
 modifyHash func (Builder builder) =
     Builder { builder | hash = func builder.hash }
 
 
-{-| Replace the hash with the provided value. Note that you should not include the "#". -}
+{-| Replace the hash with the provided value. Note that you should not include the "#".
+-}
 replaceHash : String -> Builder -> Builder
 replaceHash hash (Builder builder) =
     Builder { builder | hash = hash }
 
 
+
 -- CONVERSION
+
 
 toChange : Bool -> Builder -> UrlChange
 toChange stuffIntoHash (Builder builder) =
     let
         prefix =
-            if stuffIntoHash
-                then "#!/"
-                else "/"
+            if stuffIntoHash then
+                "#!/"
+            else
+                "/"
 
         queryPrefix =
-            if stuffIntoHash
-                then "^"
-                else "?"
+            if stuffIntoHash then
+                "^"
+            else
+                "?"
 
         joinedPath =
-            String.join "/" (List.map uriEncode builder.path)
+            String.join "/" (List.map encodeUri builder.path)
 
         joinedQuery =
-            if Dict.isEmpty builder.query
-                then ""
-                else queryPrefix ++ String.join "&" (Dict.foldl eachQuery [] builder.query)
+            if Dict.isEmpty builder.query then
+                ""
+            else
+                queryPrefix ++ String.join "&" (Dict.foldl eachQuery [] builder.query)
 
         eachQuery key value memo =
-            (uriEncode key ++ "=" ++ uriEncode value) :: memo
+            (encodeUri key ++ "=" ++ encodeUri value) :: memo
 
         hashPrefix =
-            if stuffIntoHash
-                then "$"
-                else "#"
+            if stuffIntoHash then
+                "$"
+            else
+                "#"
 
         formattedHash =
-            if builder.hash == ""
-                then ""
-                else hashPrefix ++ uriEncode builder.hash
-
+            if builder.hash == "" then
+                ""
+            else
+                hashPrefix ++ encodeUri builder.hash
     in
         { entry = builder.entry
         , url = prefix ++ joinedPath ++ joinedQuery ++ formattedHash
         }
 
+
 {-| Once you've built up your URL, use this to convert it to a `UrlChange` for use with
 `RouteUrl`.
 -}
 toUrlChange : Builder -> UrlChange
-toUrlChange = toChange False
+toUrlChange =
+    toChange False
 
 
 {-| Like [`toUrlChange`](#toUrlChange), but puts everything into the hash, prepended by "#!".
@@ -285,23 +332,25 @@ delimit the embedded hash. And, we will use '^' instead of '?' to begin
 the query parameters.
 -}
 toHashChange : Builder -> UrlChange
-toHashChange = toChange True
+toHashChange =
+    toChange True
 
 
-{-| Constructs a `Builder` from a URL. -}
+{-| Constructs a `Builder` from a URL.
+-}
 fromUrl : String -> Builder
 fromUrl url =
     let
         erl =
             Erl.parse url
-
     in
         Builder
             { entry = NewEntry
             , path = erl.path
-            , query = erl.query
-            -- note that Erl.parse doesn't seem to decode the hash for you
-            , hash = uriDecode erl.hash
+            , query =
+                erl.query
+                -- note that Erl.parse doesn't seem to decode the hash for you
+            , hash = Maybe.withDefault "" <| decodeUri erl.hash
             }
 
 
@@ -320,12 +369,11 @@ fromHash url =
     let
         unwrapped =
             Erl.parse url
-            |> .hash
-            |> replace (AtMost 1) (regex "^!") (always "")
-            |> replace (AtMost 1) (regex "$") (always "#")
-            |> replace (AtMost 1) (regex "\\^") (always "?")
-            |> Erl.parse
-
+                |> .hash
+                |> replace (AtMost 1) (regex "^!") (always "")
+                |> replace (AtMost 1) (regex "$") (always "#")
+                |> replace (AtMost 1) (regex "\\^") (always "?")
+                |> Erl.parse
     in
         Builder
             { entry = NewEntry
@@ -333,6 +381,3 @@ fromHash url =
             , query = unwrapped.query
             , hash = unwrapped.hash
             }
-
-
-
