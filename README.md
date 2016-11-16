@@ -4,7 +4,7 @@ This is a module for routing single-page-apps in Elm, building on the
 [`elm-lang/navigation`](http://package.elm-lang.org/packages/elm-lang/navigation/latest)
 package. It is the successor to elm-route-hash:
 
-* now compatible with Elm 0.17, and
+* now compatible with Elm 0.18, and
 
 * no longer limited to working only with the hash (hence the name change).
 
@@ -88,42 +88,28 @@ use elm-route-url, you don't have to.
 ### Mapping location changes to messages our app can respond to
 
 If you use the official [navigation](http://package.elm-lang.org/packages/elm-lang/navigation/latest)
-package directly, then you are asked to implement a function that acts
-sort of like `update`, but with a different signature -- it looks like this:
+package in Elm 0.18 directly, the `Navgation.program` differs from the
+standard `Html.program` in two ways:
 
-```elm
-urlUpdate : data -> model -> (model, Cmd msg)
-```
+First, you are asked to implement an argument
+to `Navigation.program` that converts a `Location` to a message
+whenever the URL changes.
 
-(The `data` here is some data which is the result of parsing the `Location`.)
+Second, the `Navigation.program` takes an init function that
+takes a `Location` as an argument. This lets you use the URL on the first frame.
 
-This, too, can be made to work. However, it is a bit odd that you are now
-permitted to bypass your `update` function and your `Message` type. It used to
-be true, in the Elm architecture, that:
-
-* the only way to change state was by sending a `Message`
-* the only place you processed messages was in your `update` function
-
-Yet now, the design of the `Navigation` module allows you to change state in
-your `urlUpdate` function, bypassing your own `Message` type and `update`
-function entirely. This is potentially problematic, because it makes reasoning
-about what your app is doing harder.
-
-To avoid this, elm-route-url asks you to implement a function with a
-different signature:
+In elm-route-url, this functionality for both of these is handled by asking
+you to implement a function with a different signature:
 
 ```elm
 location2messages : Location -> List Message
 ```
 
-Using this approach, your url-handling code has a limited scope. Instead of
-doing possibly anything, its work is limited to translating location changes to
-messages that your app could respond to even without any URLs being involved.
-
-Thus, elm-route-url maintains the principle that all changes to the model are
-done through your `update` function. Besides making it eaiser to reason about
-what your app does, this also avoids forcing you to make certain changes via
-the URL -- you simply use the equivalent messages instead.
+`location2messages` will be called when the underlying `Navigation.program`
+`init` method is invoked, so you don't need to change that in your
+program's code. And of course `location2messages` will also be called every
+time the location is changed externally (not from a state change that
+generated a new location via `delta2url`).
 
 
 ## API
@@ -153,8 +139,8 @@ should migrate to using `RouteUrl` at an appropriate moment.
 ## Examples
 
 I've included [example code](https://github.com/rgrempel/elm-route-hash/tree/master/examples/elm-architecture-tutorial)
-which turns the old Elm Architecture Tutorial into a single-page app. I've
-included three variations:
+which turns the old Elm Architecture Tutorial (upgraded to Elm 0.18) into
+a single-page app. I've included three variations:
 
 * Using the new `RouteUrl` API with the full path.
 * Using the new `RouteUrl` API with the hash only.

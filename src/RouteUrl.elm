@@ -408,7 +408,9 @@ subscriptionsWithFlags app model =
 
 
 
--- This is the function which `Navigation` will use to tell us about a new location.
+-- This is the function which decides whether to tell the calling application's
+-- `location2messages` method if a really new location has been sent to
+-- us from outside the app.
 
 
 urlUpdateWithFlags : AppWithFlags model msg flags -> Location -> Model model -> ( Model model, Cmd (Msg msg) )
@@ -502,7 +504,9 @@ subscriptions app model =
 
 
 
--- This is the function which `Navigation` will use to tell us about a new location.
+-- This is the function which decides whether to tell the calling application's
+-- `location2messages` method if a really new location has been sent to
+-- us from outside the app.
 
 
 urlUpdate : App model msg -> Location -> Model model -> ( Model model, Cmd (Msg msg) )
