@@ -64,7 +64,10 @@ import RouteUrl
         , Msg
         , UrlChange
         , HistoryEntry(NewEntry, ModifyEntry)
+        , navigationApp
+        , navigationAppWithFlags
         , runNavigationApp
+        , runNavigationAppWithFlags
         )
 
 
@@ -263,13 +266,13 @@ defaultPrefix =
     "#!/"
 
 
-location2messages : ConfigWithFlags model msg flags -> Location -> List msg
-location2messages config location =
+location2messagesWithFlags : ConfigWithFlags model msg flags -> Location -> List msg
+location2messagesWithFlags config location =
     config.location2action (hash2list config.prefix location.hash)
 
 
-delta2url : ConfigWithFlags model msg flags -> model -> model -> Maybe UrlChange
-delta2url config old new =
+delta2urlWithFlags : ConfigWithFlags model msg flags -> model -> model -> Maybe UrlChange
+delta2urlWithFlags config old new =
     Maybe.map
         (hashUpdate2urlChange config.prefix)
         (config.delta2update old new)
@@ -282,6 +285,34 @@ go directly to a `Program` instead.
 -}
 appWithFlags : ConfigWithFlags model msg flags -> AppWithFlags model msg flags
 appWithFlags config =
+    { delta2url = delta2urlWithFlags config
+    , location2messages = location2messagesWithFlags config
+    , init = config.init
+    , update = config.update
+    , subscriptions = config.subscriptions
+    , view = config.view
+    }
+
+
+location2messages : Config model msg -> Location -> List msg
+location2messages config location =
+    config.location2action (hash2list config.prefix location.hash)
+
+
+delta2url : Config model msg -> model -> model -> Maybe UrlChange
+delta2url config old new =
+    Maybe.map
+        (hashUpdate2urlChange config.prefix)
+        (config.delta2update old new)
+
+
+{-| Takes your configuration, and turns it into an `AppWithFlags`.
+
+Usually you won't need this -- you can just use [`program`](#program) to
+go directly to a `Program` instead.
+-}
+app : Config model msg -> App model msg
+app config =
     { delta2url = delta2url config
     , location2messages = location2messages config
     , init = config.init
@@ -291,23 +322,12 @@ appWithFlags config =
     }
 
 
-{-| Takes your configuration, and turns it into an `AppWithFlags`.
-
-Usually you won't need this -- you can just use [`program`](#program) to
-go directly to a `Program` instead.
--}
-app : Config model msg -> AppWithFlags model msg Never
-app config =
-    appWithFlags
-        { config | init = \_ -> config.init }
-
-
 {-| Takes your configuration, and turns it into a `Program` that can be
 used in your `main` function.
 -}
 program : Config model msg -> Program Never (Model model) (Msg msg)
 program =
-    runNavigationApp << RouteUrl.navigationAppWithFlags << app
+    runNavigationApp << navigationApp << app
 
 
 {-| Takes your configuration, and turns it into a `Program flags` that can be
@@ -315,7 +335,7 @@ used in your `main` function.
 -}
 programWithFlags : ConfigWithFlags model msg flags -> Program flags (Model model) (Msg msg)
 programWithFlags =
-    runNavigationApp << RouteUrl.navigationAppWithFlags << appWithFlags
+    runNavigationAppWithFlags << navigationAppWithFlags << appWithFlags
 
 
 {-| Remove the character from the string if it is the first character
