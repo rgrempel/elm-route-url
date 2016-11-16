@@ -4,10 +4,10 @@ module RouteUrl
         , AppWithFlags
         , UrlChange
         , HistoryEntry(NewEntry, ModifyEntry)
-        , Model
-        , Msg
         , NavigationApp
         , NavigationAppWithFlags
+        , Model
+        , Msg
         , navigationApp
         , navigationAppWithFlags
         , runNavigationApp
@@ -69,8 +69,9 @@ The simplest way to use this module is to do something like this:
 
 # More complex initialization (not usually needed)
 
-@docs NavigationApp, navigationApp, runNavigationApp
-@docs NavigationAppWithFlags, navigationAppWithFlags, runNavigationAppWithFlags
+@docs NavigationApp, NavigationAppWithFlags
+@docs navigationApp, navigationAppWithFlags
+@docs runNavigationApp, runNavigationAppWithFlags
 -}
 
 import Navigation exposing (Location)
@@ -266,15 +267,33 @@ type Msg msg
 
 
 {-| A type which represents the various inputs to
+[`Navigation.program`](http://package.elm-lang.org/packages/elm-lang/navigation/2.0.0/Navigation#program).
+
+You can produce this via [`navigationApp`](#navigationApp). Then, you can supply 
+this to [`runNavigationApp`](#runNavigationApp) in order to create a `Program`.
+
+Normally you don't need this -- you can just use [`program`](#program). 
+However, `NavigationApp` could be useful if you want to do any further wrapping 
+of its functions.
+-}
+type alias NavigationApp model msg =
+    { init : Location -> ( Model model, Cmd (Msg msg) )
+    , update : Msg msg -> Model model -> ( Model model, Cmd (Msg msg) )
+    , view : Model model -> Html (Msg msg)
+    , subscriptions : Model model -> Sub (Msg msg)
+    }
+
+
+{-| A type which represents the various inputs to
 [`Navigation.programWithFlags`](http://package.elm-lang.org/packages/elm-lang/navigation/2.0.0/Navigation#programWithFlags).
 
-You can produce this via [`navigationAppWithFlags`](#navigationAppWithFlags).
-Then, you can supply this to [`runNavigationAppWithFlags`](#runNavigationAppWithFlags)
-in order to create a `Program flags`.
+You can produce this via [`navigationAppWithFlags`](#navigationAppWithFlags). 
+Then, you can supply this to [`runNavigationApp`](#runNavigationApp) in order 
+to create a `Program flags`.
 
-Normally you don't need this -- you can just use
-[`programWithFlags`](#programWithFlags). However, `NavigationAppWIthFlags` could be
-useful if you want to do any further wrapping of its functions.
+Normally you don't need this -- you can just use 
+[`programWithFlags`](#programWithFlags). However, `NavigationAppWithFlags` 
+could be useful if you want to do any further wrapping of its functions.
 -}
 type alias NavigationAppWithFlags model msg flags =
     { init : flags -> Location -> ( Model model, Cmd (Msg msg) )
@@ -286,75 +305,29 @@ type alias NavigationAppWithFlags model msg flags =
 
 {-| Given your configuration, this function does some wrapping and produces
 the functions which
-[`Navigation.programWithFlags`](http://package.elm-lang.org/packages/elm-lang/navigation/1.0.0/Navigation#programWithFlags)
-requires.
-
-Normally, you don't need this -- you can just use [`programWithFlags`](#programWithFlags).
--}
-navigationAppWithFlags : AppWithFlags model msg flags -> NavigationAppWithFlags model msg flags
-navigationAppWithFlags app =
-    { init = initWithFlags app
-    , update = updateWithFlags app
-    , view = viewWithFlags app
-    , subscriptions = subscriptionsWithFlags app
-    }
-
-
-{-| Turns the output from
-or [`navigationAppWithFlags`](#navigationAppWithFlags) into a `Program flags` that
-you can assign to your `main` function.
-
-For convenience, you will usually want to just use
-[`programWithFlags`](#programWithFlags), which goes directly from the required
-configuration to a `Program flags`. You would only want `runNavigationAppWithFlags` for the
-sake of composability -- that is, in case there is something further you want
-to do with the `NavigationAppWithFlags` structure before turning it into a `Program`.
--}
-runNavigationAppWithFlags : NavigationAppWithFlags model msg flags -> Program flags (Model model) (Msg msg)
-runNavigationAppWithFlags app =
-    Navigation.programWithFlags (\location -> RouterMsg location)
-        { init = app.init
-        , update = app.update
-        , view = app.view
-        , subscriptions = app.subscriptions
-        }
-
-
-{-| Turns your configuration into a `Program flags` that you can assign to your
-`main` function.
--}
-programWithFlags : AppWithFlags model msg flags -> Program flags (Model model) (Msg msg)
-programWithFlags =
-    runNavigationAppWithFlags << navigationAppWithFlags
-
-
-{-| A type which represents the various inputs to
-[`Navigation.program`](http://package.elm-lang.org/packages/elm-lang/navigation/2.0.0/Navigation#program).
-
-You can produce this via [`navigationApp`](#navigationApp). Then, you can supply this to
-[`runNavigationApp`](#runNavigationApp) in order to create a `Program`.
-
-Normally you don't need this -- you can just use [`program`](#program).
-However, `NavigationApp` could be useful if you want to do any further
-wrapping of its functions.
--}
-type alias NavigationApp model msg =
-    { init : Location -> ( Model model, Cmd (Msg msg) )
-    , update : Msg msg -> Model model -> ( Model model, Cmd (Msg msg) )
-    , view : Model model -> Html (Msg msg)
-    , subscriptions : Model model -> Sub (Msg msg)
-    }
-
-
-{-| Given your configuration, this function does some wrapping and produces
-the functions which
-[`Navigation.program`](http://package.elm-lang.org/packages/elm-lang/navigation/1.0.0/Navigation#program)
+[`Navigation.program`](http://package.elm-lang.org/packages/elm-lang/navigation/2.0.0/Navigation#program)
 requires.
 
 Normally, you don't need this -- you can just use [`program`](#program).
 -}
 navigationApp : App model msg -> NavigationApp model msg
 navigationApp app =
+    { init = init_ app
+    , update = update_ app
+    , view = view_ app
+    , subscriptions = subscriptions_ app
+    }
+
+
+{-| Given your configuration, this function does some wrapping and produces
+the functions which
+[`Navigation.programWithFlags`](http://package.elm-lang.org/packages/elm-lang/navigation/2.0.0/Navigation#programWithFlags)
+requires.
+
+Normally, you don't need this -- you can just use [`programWithFlags`](#programWithFlags).
+-}
+navigationAppWithFlags : AppWithFlags model msg flags -> NavigationAppWithFlags model msg flags
+navigationAppWithFlags app =
     { init = init app
     , update = update app
     , view = view app
@@ -362,18 +335,37 @@ navigationApp app =
     }
 
 
-{-| Turns the output from [`navigationApp`](#navigationApp)  into a `Program`
-that you can assign to your `main` function.
+{-| Turns the output from [`navigationApp`](#navigationApp)
+into a `Program` that you can assign to your `main` function.
 
 For convenience, you will usually want to just use [`program`](#program),
-which goes directly from the required configuration to a `Program`.
-You would only want `runNavigationApp` for the
+which goes directly from the required
+configuration to a `Program`. You would only want `runNavigationApp` for the
 sake of composability -- that is, in case there is something further you want
 to do with the `NavigationApp` structure before turning it into a `Program`.
 -}
 runNavigationApp : NavigationApp model msg -> Program Never (Model model) (Msg msg)
 runNavigationApp app =
     Navigation.program (\location -> RouterMsg location)
+        { init = app.init
+        , update = app.update
+        , view = app.view
+        , subscriptions = app.subscriptions
+        }
+
+
+{-| Turns the output from [`navigationAppWithFlags`](#navigationAppWithFlags) 
+into a `Program flags` that you can assign to your `main` function.
+
+For convenience, you will usually want to just use 
+[`programWithFlags`](#programWithFlags), which goes directly from the required
+configuration to a `Program flags`. You would only want `runNavigationAppWithFlags` 
+for the sake of composability -- that is, in case there is something further 
+you want to do with the `NavigationApp` structure before turning it into a `Program flags`.
+-}
+runNavigationAppWithFlags : NavigationAppWithFlags model msg flags -> Program flags (Model model) (Msg msg)
+runNavigationAppWithFlags app =
+    Navigation.programWithFlags (\location -> RouterMsg location)
         { init = app.init
         , update = app.update
         , view = app.view
@@ -389,184 +381,67 @@ program =
     runNavigationApp << navigationApp
 
 
+{-| Turns your configuration into a `Program flags` that you can assign to your
+`main` function.
+-}
+programWithFlags : AppWithFlags model msg flags -> Program flags (Model model) (Msg msg)
+programWithFlags =
+    runNavigationAppWithFlags << navigationAppWithFlags
 
--- IMPLEMENTATION (with flags)
+
+
+-- IMPLEMENTATION
 -- Call the provided view function with the user's part of the model
 
 
-viewWithFlags : AppWithFlags model msg flags -> Model model -> Html (Msg msg)
-viewWithFlags app model =
-    Html.map UserMsg <| app.view model.user
-
-
--- Call the provided subscriptions function with the user's part of the model
-
-
-subscriptionsWithFlags : AppWithFlags model msg flags -> Model model -> Sub (Msg msg)
-subscriptionsWithFlags app model =
-    Sub.map UserMsg <| app.subscriptions model.user
-
-
-
--- This is the function which decides whether to tell the calling application's
--- `location2messages` method if a really new location has been sent to
--- us from outside the app.
-
-
-urlUpdateWithFlags : AppWithFlags model msg flags -> Location -> Model model -> ( Model model, Cmd (Msg msg) )
-urlUpdateWithFlags app location model =
-    let
-        -- This is the same, no matter which path we follow below. Basically,
-        -- we're keeping track of the last reported Url (i.e. what's in the location
-        -- bar now), and all the hrefs which we expect (because we've set them
-        -- ourselves). So, we remove the current href from the expectations.
-        newRouterModel =
-            { reportedUrl =
-                Erl.parse location.href
-            , expectedUrlUpdates =
-                if model.router.expectedUrlUpdates > 0 then
-                    model.router.expectedUrlUpdates - 1
-                else
-                    0
-            }
-    in
-        if model.router.expectedUrlUpdates > 0 then
-            -- This is a urlUpdate which we were expecting, because we did
-            -- it in response to a change in the app's state.  So, we don't
-            -- make any *further* change to the app's state here ... we
-            -- just record that we've seen the urlUpdate we expected.
-            ( { model | router = newRouterModel }
-            , Cmd.none
-            )
-        else
-            -- This is an href which came from the outside ... i.e. clicking on a link,
-            -- typing in the location bar, following a bookmark. So, we need to update
-            -- the app's state to correspond to the new location.
-            let
-                ( newUserModel, commands ) =
-                    List.foldl step ( model.user, [] ) (app.location2messages location)
-
-                step msg ( userModel, commandList ) =
-                    case app.update msg userModel of
-                        ( stepModel, stepCmd ) ->
-                            ( stepModel, stepCmd :: commandList )
-            in
-                ( { user = newUserModel
-                  , router = newRouterModel
-                  }
-                , Cmd.map UserMsg <| Cmd.batch commands
-                )
-
-
-initWithFlags : AppWithFlags model msg flags -> flags -> Location -> ( Model model, Cmd (Msg msg) )
-initWithFlags app flags location =
-    let
-        ( userModelFromFlags, commandFromFlags ) =
-            app.init flags
-
-        ( userModelFromLocation, commands ) =
-            List.foldl step ( userModelFromFlags, [ commandFromFlags ] ) (app.location2messages location)
-
-        step msg ( userModel, commandList ) =
-            case app.update msg userModel of
-                ( stepModel, stepCmd ) ->
-                    ( stepModel, stepCmd :: commandList )
-
-        routerModel =
-            { expectedUrlUpdates = 0
-            , reportedUrl = Erl.parse location.href
-            }
-    in
-        ( { user = userModelFromLocation
-          , router = routerModel
-          }
-        , Cmd.map UserMsg <| Cmd.batch commands
-        )
-
-
-
-
--- IMPLEMENTATION (without flags)
--- Call the provided view function with the user's part of the model
-
-
-view : App model msg -> Model model -> Html (Msg msg)
+view : AppWithFlags model msg flags -> Model model -> Html (Msg msg)
 view app model =
     Html.map UserMsg <| app.view model.user
 
 
+view_ : App model msg -> Model model -> Html (Msg msg)
+view_ app model =
+    Html.map UserMsg <| app.view model.user
+
+
+
 -- Call the provided subscriptions function with the user's part of the model
 
 
-subscriptions : App model msg -> Model model -> Sub (Msg msg)
+subscriptions : AppWithFlags model msg flags -> Model model -> Sub (Msg msg)
 subscriptions app model =
     Sub.map UserMsg <| app.subscriptions model.user
 
 
+subscriptions_ : App model msg -> Model model -> Sub (Msg msg)
+subscriptions_ app model =
+    Sub.map UserMsg <| app.subscriptions model.user
 
--- This is the function which decides whether to tell the calling application's
--- `location2messages` method if a really new location has been sent to
--- us from outside the app.
 
 
-urlUpdate : App model msg -> Location -> Model model -> ( Model model, Cmd (Msg msg) )
-urlUpdate app location model =
+-- Call the provided init function with the user's part of the model
+
+
+init : AppWithFlags model msg flags -> flags -> Location -> ( Model model, Cmd (Msg msg) )
+init app flags location =
+    initImpl app.update app.location2messages location (app.init flags)
+
+
+init_ : App model msg -> Location -> ( Model model, Cmd (Msg msg) )
+init_ app location =
+    initImpl app.update app.location2messages location app.init
+
+
+
+-- Common processing for init and init_, processing any messages
+-- from the initial location.
+
+
+initImpl upd l2m location ( userModelFromFlags, commandFromFlags ) =
     let
-        -- This is the same, no matter which path we follow below. Basically,
-        -- we're keeping track of the last reported Url (i.e. what's in the location
-        -- bar now), and all the hrefs which we expect (because we've set them
-        -- ourselves). So, we remove the current href from the expectations.
-        newRouterModel =
-            { reportedUrl =
-                Erl.parse location.href
-            , expectedUrlUpdates =
-                if model.router.expectedUrlUpdates > 0 then
-                    model.router.expectedUrlUpdates - 1
-                else
-                    0
-            }
-    in
-        if model.router.expectedUrlUpdates > 0 then
-            -- This is a urlUpdate which we were expecting, because we did
-            -- it in response to a change in the app's state.  So, we don't
-            -- make any *further* change to the app's state here ... we
-            -- just record that we've seen the urlUpdate we expected.
-            ( { model | router = newRouterModel }
-            , Cmd.none
-            )
-        else
-            -- This is an href which came from the outside ... i.e. clicking on a link,
-            -- typing in the location bar, following a bookmark. So, we need to update
-            -- the app's state to correspond to the new location.
-            let
-                ( newUserModel, commands ) =
-                    List.foldl step ( model.user, [] ) (app.location2messages location)
-
-                step msg ( userModel, commandList ) =
-                    case app.update msg userModel of
-                        ( stepModel, stepCmd ) ->
-                            ( stepModel, stepCmd :: commandList )
-            in
-                ( { user = newUserModel
-                  , router = newRouterModel
-                  }
-                , Cmd.map UserMsg <| Cmd.batch commands
-                )
-
-
-init : App model msg -> Location -> ( Model model, Cmd (Msg msg) )
-init app location =
-    let
-        ( userModelFromInit, commandFromInit ) =
-            app.init
-
-        ( userModelFromLocation, commands ) =
-            List.foldl step ( userModelFromInit, [ commandFromInit ] ) (app.location2messages location)
-
-        step msg ( userModel, commandList ) =
-            case app.update msg userModel of
-                ( stepModel, stepCmd ) ->
-                    ( stepModel, stepCmd :: commandList )
+        locationMessages = l2m location
+        (userModelFromLocation, commands) =
+            processLocationMessages upd locationMessages userModelFromFlags [ commandFromFlags ]
 
         routerModel =
             { expectedUrlUpdates = 0
@@ -578,6 +453,23 @@ init app location =
           }
         , Cmd.map UserMsg <| Cmd.batch commands
         )
+
+
+
+-- This function steps through the list of messages derived from the
+-- app's location2messages function, and updates the apps user model,
+-- returning the final state and any commands returned by the app's
+-- update function.
+
+
+processLocationMessages upd locationMessages userModel initialCommandList =
+    let
+        step msg (userModel, commandList) =
+            case upd msg userModel of
+                ( stepModel, stepCmd ) ->
+                    ( stepModel, stepCmd :: commandList )
+    in
+        List.foldl step (userModel, initialCommandList) locationMessages
 
 
 
@@ -652,73 +544,41 @@ normalizeUrl old change =
         change
 
 
--- This is the normal `update` function we're providing to `Navigation`.
---
--- Note that this will only be called for changes that are not due to changes in the
--- URL. `Navigation` calls `urlUpdate` for that, not update. And, when we react to
--- `urlUpdate`, we call the user's `update` method directly, not this one.
-
-
-updateWithFlags : AppWithFlags model msg flags -> Msg msg -> Model model -> ( Model model, Cmd (Msg msg) )
-updateWithFlags app msg model =
-    case msg of
-        RouterMsg location ->
-            urlUpdateWithFlags app location model
-
-        UserMsg userMsg ->
-            let
-                ( newUserModel, userCommand ) =
-                    -- Here we "delegate" to the `update` function provided by the user
-                    app.update userMsg model.user
-
-                maybeUrlChange =
-                    Maybe.map
-                        (normalizeUrl model.router.reportedUrl)
-                        (app.delta2url model.user newUserModel)
-                        |> Maybe.andThen (checkDistinctUrl model.router.reportedUrl)
-            in
-                case maybeUrlChange of
-                    Just urlChange ->
-                        ( { user = newUserModel
-                          , router =
-                                { reportedUrl = Erl.parse urlChange.url
-                                , expectedUrlUpdates = model.router.expectedUrlUpdates + 1
-                                }
-                          }
-                        , Cmd.map UserMsg <| Cmd.batch [ urlChange2Cmd urlChange, userCommand ]
-                        )
-
-                    Nothing ->
-                        ( { user = newUserModel
-                          , router = model.router
-                          }
-                        , Cmd.map UserMsg userCommand
-                        )
-
 
 -- This is the normal `update` function we're providing to `Navigation`.
---
--- Note that this will only be called for changes that are not due to changes in the
--- URL. `Navigation` calls `urlUpdate` for that, not update. And, when we react to
--- `urlUpdate`, we call the user's `update` method directly, not this one.
 
 
-update : App model msg -> Msg msg -> Model model -> ( Model model, Cmd (Msg msg) )
+update : AppWithFlags model msg flags -> Msg msg -> Model model -> ( Model model, Cmd (Msg msg) )
 update app msg model =
+    updateImpl app.update app.location2messages app.delta2url msg model
+
+
+update_ : App model msg -> Msg msg -> Model model -> ( Model model, Cmd (Msg msg) )
+update_ app msg model =
+    updateImpl app.update app.location2messages app.delta2url msg model
+
+
+
+-- Common processing for the app's update function.
+
+
+updateImpl upd l2m d2u msg model =
     case msg of
         RouterMsg location ->
-            urlUpdate app location model
+            -- Handle routing updates sent to us by the Navigation.program
+            urlUpdateImpl upd l2m location model
 
         UserMsg userMsg ->
+            -- Handle app-specific messages
             let
                 ( newUserModel, userCommand ) =
                     -- Here we "delegate" to the `update` function provided by the user
-                    app.update userMsg model.user
+                    upd userMsg model.user
 
                 maybeUrlChange =
                     Maybe.map
                         (normalizeUrl model.router.reportedUrl)
-                        (app.delta2url model.user newUserModel)
+                        (d2u model.user newUserModel)
                         |> Maybe.andThen (checkDistinctUrl model.router.reportedUrl)
             in
                 case maybeUrlChange of
@@ -738,3 +598,49 @@ update app msg model =
                           }
                         , Cmd.map UserMsg userCommand
                         )
+
+
+
+-- This is the function which decides whether to tell the calling application's
+-- `location2messages` method if a really new location has been sent to
+-- us from outside the app.
+
+
+urlUpdateImpl upd l2m location model =
+    let
+        -- This is the same, no matter which path we follow below. Basically,
+        -- we're keeping track of the last reported Url (i.e. what's in the location
+        -- bar now), and all the hrefs which we expect (because we've set them
+        -- ourselves). So, we remove the current href from the expectations.
+        newRouterModel =
+            { reportedUrl =
+                Erl.parse location.href
+            , expectedUrlUpdates =
+                if model.router.expectedUrlUpdates > 0 then
+                    model.router.expectedUrlUpdates - 1
+                else
+                    0
+            }
+    in
+        if model.router.expectedUrlUpdates > 0 then
+            -- This is a urlUpdate which we were expecting, because we did
+            -- it in response to a change in the app's state.  So, we don't
+            -- make any *further* change to the app's state here ... we
+            -- just record that we've seen the urlUpdate we expected.
+            ( { model | router = newRouterModel }
+            , Cmd.none
+            )
+        else
+            -- This is an href which came from the outside ... i.e. clicking on a link,
+            -- typing in the location bar, following a bookmark. So, we need to update
+            -- the app's state to correspond to the new location.
+            let
+                locationMessages = l2m location
+                (userModelFromLocation, commands) =
+                    processLocationMessages upd locationMessages model.user []
+            in
+                ( { user = userModelFromLocation
+                  , router = newRouterModel
+                  }
+                , Cmd.map UserMsg <| Cmd.batch commands
+                )
