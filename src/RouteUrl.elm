@@ -269,11 +269,11 @@ type Msg msg
 {-| A type which represents the various inputs to
 [`Navigation.program`](http://package.elm-lang.org/packages/elm-lang/navigation/2.0.0/Navigation#program).
 
-You can produce this via [`navigationApp`](#navigationApp). Then, you can supply 
+You can produce this via [`navigationApp`](#navigationApp). Then, you can supply
 this to [`runNavigationApp`](#runNavigationApp) in order to create a `Program`.
 
-Normally you don't need this -- you can just use [`program`](#program). 
-However, `NavigationApp` could be useful if you want to do any further wrapping 
+Normally you don't need this -- you can just use [`program`](#program).
+However, `NavigationApp` could be useful if you want to do any further wrapping
 of its functions.
 -}
 type alias NavigationApp model msg =
@@ -287,12 +287,12 @@ type alias NavigationApp model msg =
 {-| A type which represents the various inputs to
 [`Navigation.programWithFlags`](http://package.elm-lang.org/packages/elm-lang/navigation/2.0.0/Navigation#programWithFlags).
 
-You can produce this via [`navigationAppWithFlags`](#navigationAppWithFlags). 
-Then, you can supply this to [`runNavigationApp`](#runNavigationApp) in order 
+You can produce this via [`navigationAppWithFlags`](#navigationAppWithFlags).
+Then, you can supply this to [`runNavigationApp`](#runNavigationApp) in order
 to create a `Program flags`.
 
-Normally you don't need this -- you can just use 
-[`programWithFlags`](#programWithFlags). However, `NavigationAppWithFlags` 
+Normally you don't need this -- you can just use
+[`programWithFlags`](#programWithFlags). However, `NavigationAppWithFlags`
 could be useful if you want to do any further wrapping of its functions.
 -}
 type alias NavigationAppWithFlags model msg flags =
@@ -354,13 +354,13 @@ runNavigationApp app =
         }
 
 
-{-| Turns the output from [`navigationAppWithFlags`](#navigationAppWithFlags) 
+{-| Turns the output from [`navigationAppWithFlags`](#navigationAppWithFlags)
 into a `Program flags` that you can assign to your `main` function.
 
-For convenience, you will usually want to just use 
+For convenience, you will usually want to just use
 [`programWithFlags`](#programWithFlags), which goes directly from the required
-configuration to a `Program flags`. You would only want `runNavigationAppWithFlags` 
-for the sake of composability -- that is, in case there is something further 
+configuration to a `Program flags`. You would only want `runNavigationAppWithFlags`
+for the sake of composability -- that is, in case there is something further
 you want to do with the `NavigationApp` structure before turning it into a `Program flags`.
 -}
 runNavigationAppWithFlags : NavigationAppWithFlags model msg flags -> Program flags (Model model) (Msg msg)
@@ -437,6 +437,12 @@ init_ app location =
 -- from the initial location.
 
 
+initImpl
+    : (xmsg -> model -> ( model, Cmd msg ))
+    -> (Location -> List xmsg)
+    -> Location
+    -> ( model, Cmd msg )
+    -> ( Model model, Cmd (Msg msg) )
 initImpl upd l2m location ( userModelFromFlags, commandFromFlags ) =
     let
         locationMessages = l2m location
@@ -461,7 +467,12 @@ initImpl upd l2m location ( userModelFromFlags, commandFromFlags ) =
 -- returning the final state and any commands returned by the app's
 -- update function.
 
-
+processLocationMessages
+    : (xmsg -> model -> ( model, Cmd msg ))
+    -> List xmsg
+    -> model
+    -> List (Cmd msg)
+    -> ( model, List (Cmd msg) )
 processLocationMessages upd locationMessages userModel initialCommandList =
     let
         step msg (userModel, commandList) =
@@ -562,6 +573,13 @@ update_ app msg model =
 -- Common processing for the app's update function.
 
 
+updateImpl
+    : (xmsg -> model -> ( model, Cmd msg ))
+    -> ( Location -> List xmsg )
+    -> (model -> model -> Maybe UrlChange)
+    -> Msg xmsg
+    -> Model model
+    -> ( Model model, Cmd (Msg msg) )
 updateImpl upd l2m d2u msg model =
     case msg of
         RouterMsg location ->
@@ -606,6 +624,12 @@ updateImpl upd l2m d2u msg model =
 -- us from outside the app.
 
 
+urlUpdateImpl
+    : (xmsg -> model -> ( model, Cmd msg ))
+    -> (Location -> List xmsg)
+    -> Location
+    -> Model model
+    -> ( Model model, Cmd (Msg msg) )
 urlUpdateImpl upd l2m location model =
     let
         -- This is the same, no matter which path we follow below. Basically,
