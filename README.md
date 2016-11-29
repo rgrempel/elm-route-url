@@ -119,7 +119,7 @@ is already in sync with that URL -- no message is required.
 ### Philosphically
 
 You can, if you are so inclined, think about those differences in a more
-philosophical way. There is an [thread](https://groups.google.com/forum/#!topic/elm-discuss/KacB1VqkVJg/discussion)
+philosophical way. There is a [thread](https://groups.google.com/forum/#!topic/elm-discuss/KacB1VqkVJg/discussion)
 on the Elm mailing list where Erik Lott gives an excellent summary.
 The question, he says, is whether the address bar should drive the model,
 or whether the model should drive the address bar. For more details,
