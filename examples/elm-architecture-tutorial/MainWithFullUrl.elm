@@ -1,10 +1,10 @@
 module Main exposing (..)
 
-import ExampleViewer
-import RouteUrl
+import ExampleViewer exposing (Model, Action)
+import RouteUrl exposing (WrappedModel, WrappedMsg)
 
 
-main : Program Never (RouteUrl.Model ExampleViewer.Model) (RouteUrl.Msg ExampleViewer.Action)
+main : Program Never (WrappedModel Model) (WrappedMsg Action)
 main =
     RouteUrl.program
         { delta2url = ExampleViewer.delta2url

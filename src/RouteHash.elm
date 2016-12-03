@@ -6,8 +6,6 @@ module RouteHash
         , apply
         , map
         , extract
-        , Model
-        , Msg
         , Config
         , ConfigWithFlags
         , defaultPrefix
@@ -60,8 +58,8 @@ import RouteUrl
         ( NavigationApp
         , App
         , AppWithFlags
-        , Model
-        , Msg
+        , WrappedModel
+        , WrappedMsg
         , UrlChange
         , HistoryEntry(NewEntry, ModifyEntry)
         , navigationApp
@@ -77,12 +75,6 @@ browser's location.
 type HashUpdate
     = SetPath (List String)
     | ReplacePath (List String)
-
-
-type alias Model model = RouteUrl.Model model
-
-
-type alias Msg msg = RouteUrl.Msg msg
 
 
 hashUpdate2urlChange : String -> HashUpdate -> UrlChange
@@ -325,7 +317,7 @@ app config =
 {-| Takes your configuration, and turns it into a `Program` that can be
 used in your `main` function.
 -}
-program : Config model msg -> Program Never (Model model) (Msg msg)
+program : Config model msg -> Program Never (WrappedModel model) (WrappedMsg msg)
 program =
     runNavigationApp << navigationApp << app
 
@@ -333,7 +325,7 @@ program =
 {-| Takes your configuration, and turns it into a `Program flags` that can be
 used in your `main` function.
 -}
-programWithFlags : ConfigWithFlags model msg flags -> Program flags (Model model) (Msg msg)
+programWithFlags : ConfigWithFlags model msg flags -> Program flags (WrappedModel model) (WrappedMsg msg)
 programWithFlags =
     runNavigationAppWithFlags << navigationAppWithFlags << appWithFlags
 
