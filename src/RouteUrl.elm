@@ -74,11 +74,11 @@ The simplest way to use this module is to do something like this:
 @docs runNavigationApp, runNavigationAppWithFlags
 -}
 
-import Navigation exposing (Location)
-import Html exposing (Html)
-import Erl exposing (Url)
-import String exposing (startsWith)
 import Dict
+import Erl exposing (Url)
+import Html exposing (Html)
+import Navigation exposing (Location)
+import String exposing (startsWith)
 import Update.Extra exposing (sequence)
 
 
