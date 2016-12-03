@@ -79,6 +79,7 @@ import Html exposing (Html)
 import Erl exposing (Url)
 import String exposing (startsWith)
 import Dict
+import Update.Extra exposing (sequence)
 
 
 -- THINGS CLIENTS PROVIDE
@@ -438,8 +439,8 @@ init_ app location =
 
 
 initImpl
-    : (xmsg -> model -> ( model, Cmd msg ))
-    -> (Location -> List xmsg)
+    : (msg -> model -> ( model, Cmd msg ))
+    -> (Location -> List msg)
     -> Location
     -> ( model, Cmd msg )
     -> ( Model model, Cmd (Msg msg) )
@@ -447,7 +448,7 @@ initImpl upd l2m location ( userModelFromFlags, commandFromFlags ) =
     let
         locationMessages = l2m location
         (userModelFromLocation, commands) =
-            processLocationMessages upd locationMessages userModelFromFlags [ commandFromFlags ]
+            Update.Extra.sequence upd locationMessages ( userModelFromFlags, commandFromFlags )
 
         routerModel =
             { expectedUrlUpdates = 0
@@ -457,30 +458,8 @@ initImpl upd l2m location ( userModelFromFlags, commandFromFlags ) =
         ( { user = userModelFromLocation
           , router = routerModel
           }
-        , Cmd.map UserMsg <| Cmd.batch commands
+        , Cmd.map UserMsg commands
         )
-
-
-
--- This function steps through the list of messages derived from the
--- app's location2messages function, and updates the apps user model,
--- returning the final state and any commands returned by the app's
--- update function.
-
-processLocationMessages
-    : (xmsg -> model -> ( model, Cmd msg ))
-    -> List xmsg
-    -> model
-    -> List (Cmd msg)
-    -> ( model, List (Cmd msg) )
-processLocationMessages upd locationMessages userModel initialCommandList =
-    let
-        step msg (userModel, commandList) =
-            case upd msg userModel of
-                ( stepModel, stepCmd ) ->
-                    ( stepModel, stepCmd :: commandList )
-    in
-        List.foldl step (userModel, initialCommandList) locationMessages
 
 
 
@@ -574,10 +553,10 @@ update_ app msg model =
 
 
 updateImpl
-    : (xmsg -> model -> ( model, Cmd msg ))
-    -> ( Location -> List xmsg )
+    : (msg -> model -> ( model, Cmd msg ))
+    -> ( Location -> List msg )
     -> (model -> model -> Maybe UrlChange)
-    -> Msg xmsg
+    -> Msg msg
     -> Model model
     -> ( Model model, Cmd (Msg msg) )
 updateImpl upd l2m d2u msg model =
@@ -625,8 +604,8 @@ updateImpl upd l2m d2u msg model =
 
 
 urlUpdateImpl
-    : (xmsg -> model -> ( model, Cmd msg ))
-    -> (Location -> List xmsg)
+    : (msg -> model -> ( model, Cmd msg ))
+    -> (Location -> List msg)
     -> Location
     -> Model model
     -> ( Model model, Cmd (Msg msg) )
@@ -661,10 +640,10 @@ urlUpdateImpl upd l2m location model =
             let
                 locationMessages = l2m location
                 (userModelFromLocation, commands) =
-                    processLocationMessages upd locationMessages model.user []
+                    Update.Extra.sequence upd locationMessages ( model.user, Cmd.none )
             in
                 ( { user = userModelFromLocation
                   , router = newRouterModel
                   }
-                , Cmd.map UserMsg <| Cmd.batch commands
+                , Cmd.map UserMsg commands
                 )
