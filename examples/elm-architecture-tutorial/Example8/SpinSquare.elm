@@ -43,9 +43,10 @@ duration =
 
 
 -- UPDATE
--- For the advanced example, allow setting the angle directly
 
 
+{-| For the advanced example, allow setting the angle directly
+-}
 type Action
     = Spin
     | Tick Time
@@ -164,9 +165,10 @@ view model =
 
 
 -- Routing
--- Again, we don't necessarily need to use the same signature always ...
 
 
+{-| Again, we don't necessarily need to use the same signature always ...
+-}
 delta2update : Model -> Maybe String
 delta2update current =
     -- We only want to update if our animation state is Nothing, since

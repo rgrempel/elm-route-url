@@ -11,11 +11,12 @@ import RouteUrl.Builder exposing (Builder, builder, appendToPath)
 
 
 -- MODEL
--- For the advanced example, we need to keep track of a status in order to deal
--- with the fact that a request for a random gif may be in progress when our
--- location changes. In that case, we want (in effect) to cancel the request.
 
 
+{-| For the advanced example, we need to keep track of a status in order to deal
+with the fact that a request for a random gif may be in progress when our
+location changes. In that case, we want (in effect) to cancel the request.
+-}
 type alias Model =
     { topic : String
     , gifUrl : String
@@ -23,20 +24,16 @@ type alias Model =
     }
 
 
-
--- Tracks whether we should use or ignore the response from getRandomGif
-
-
+{-| Tracks whether we should use or ignore the response from getRandomGif
+-}
 type RequestStatus
     = Use
     | Ignore
 
 
-
--- We start the requestStatus as Use so that we will use the response to the
--- initial request we issue here.
-
-
+{-| We start the requestStatus as Use so that we will use the response to the
+initial request we issue here.
+-}
 init : String -> ( Model, Cmd Action )
 init topic =
     ( Model topic "assets/waiting.gif" Use
@@ -46,11 +43,12 @@ init topic =
 
 
 -- UPDATE
--- We end up needing a separate action for setting the gif from the location,
--- because in that case we also need to "cancel" any outstanding requests for a
--- random gif.
 
 
+{-| We end up needing a separate action for setting the gif from the location,
+because in that case we also need to "cancel" any outstanding requests for a
+random gif.
+-}
 type Action
     = RequestMore
     | NewGif (Result Http.Error String)
@@ -136,24 +134,24 @@ imgStyle url =
 -- EFFECTS
 
 
-urlWithArgs : String -> List (String, String) -> String
+urlWithArgs : String -> List ( String, String ) -> String
 urlWithArgs baseUrl args =
-  case args of
-    [] ->
-        baseUrl
+    case args of
+        [] ->
+            baseUrl
 
-    _ ->
-        baseUrl ++ "?" ++ String.join "&" (List.map queryPair args)
+        _ ->
+            baseUrl ++ "?" ++ String.join "&" (List.map queryPair args)
 
 
-queryPair : (String,String) -> String
-queryPair (key,value) =
-  queryEscape key ++ "=" ++ queryEscape value
+queryPair : ( String, String ) -> String
+queryPair ( key, value ) =
+    queryEscape key ++ "=" ++ queryEscape value
 
 
 queryEscape : String -> String
 queryEscape string =
-  String.join "+" (String.split "%20" (Http.encodeUri string))
+    String.join "+" (String.split "%20" (Http.encodeUri string))
 
 
 getRandomGif : String -> Cmd Action
@@ -177,11 +175,12 @@ decodeUrl =
 
 
 -- Routing
--- We'll generate URLs like "/gifUrl". Note that this treats the topic as an
--- invariant, which it is here ... it can only be supplied on initialization.
--- If it weren't invariant, we'd need to do something more complex.
 
 
+{-| We'll generate URLs like "/gifUrl". Note that this treats the topic as an
+invariant, which it is here ... it can only be supplied on initialization.
+If it weren't invariant, we'd need to do something more complex.
+-}
 delta2update : Model -> Model -> Maybe HashUpdate
 delta2update previous current =
     if current.gifUrl == "assets/waiting.gif" then

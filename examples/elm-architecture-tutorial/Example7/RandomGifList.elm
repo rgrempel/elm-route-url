@@ -28,10 +28,11 @@ init =
 
 
 -- UPDATE
--- Add an action for the advanced example to set our state from a list
--- of topics and gifUrls
 
 
+{-| Add an action for the advanced example to set our state from a list
+of topics and gifUrls
+-}
 type Action
     = Topic String
     | Create
@@ -156,7 +157,6 @@ inputStyle =
         ]
 
 
-
 onEnter : Action -> Attribute Action
 onEnter action =
     on "keydown" <|
@@ -173,14 +173,12 @@ is13 code =
         Json.fail "not the right key code"
 
 
-
--- We add a separate function to get a title, which the ExampleViewer uses to
--- construct a table of contents. Sometimes, you might have a function of this
--- kind return `Html` instead, depending on where it makes sense to do some of
--- the construction. Or, you could track the title in the higher level module,
--- if you prefer that.
-
-
+{-| We add a separate function to get a title, which the ExampleViewer uses to
+construct a table of contents. Sometimes, you might have a function of this
+kind return `Html` instead, depending on where it makes sense to do some of
+the construction. Or, you could track the title in the higher level module,
+if you prefer that.
+-}
 title : String
 title =
     "List of Random Gifs"
@@ -188,11 +186,12 @@ title =
 
 
 -- Routing (Old API)
--- We record each thing in the gifList. Note that we don't track the ID's,
--- since in this app there isn't any need to preserve them ... of course, we
--- could track them if it mattered.
 
 
+{-| We record each thing in the gifList. Note that we don't track the ID's,
+since in this app there isn't any need to preserve them ... of course, we
+could track them if it mattered.
+-}
 delta2update : Model -> Model -> Maybe HashUpdate
 delta2update previous current =
     current.gifList

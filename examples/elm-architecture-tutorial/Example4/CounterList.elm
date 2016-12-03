@@ -32,9 +32,10 @@ init =
 
 
 -- UPDATE
--- Add an action for the advanced example to set our state from a `list int`
 
 
+{-| Add an action for the advanced example to set our state from a `list int`
+-}
 type Action
     = Insert
     | Remove ID
@@ -102,14 +103,12 @@ viewCounter ( id, model ) =
         Counter.viewWithRemoveButton context model
 
 
-
--- We add a separate function to get a title, which the ExampleViewer uses to
--- construct a table of contents. Sometimes, you might have a function of this
--- kind return `Html` instead, depending on where it makes sense to do some of
--- the construction. Or, you could track the title in the higher level module,
--- if you prefer that.
-
-
+{-| We add a separate function to get a title, which the ExampleViewer uses to
+construct a table of contents. Sometimes, you might have a function of this
+kind return `Html` instead, depending on where it makes sense to do some of
+the construction. Or, you could track the title in the higher level module,
+if you prefer that.
+-}
 title : String
 title =
     "List of Counters (individually removable)"
@@ -117,13 +116,14 @@ title =
 
 
 -- Routing (Old API)
--- You could do this in a variety of ways. We'll ignore the ID's, and just
--- encode the value of each Counter in the list -- so we'll end up with
--- something like /0/1/5 or whatever. When we recreate that, we won't
--- necessarily have the same IDs, but that doesn't matter for this example.
--- If it mattered, we'd have to do this a different way.
 
 
+{-| You could do this in a variety of ways. We'll ignore the ID's, and just
+encode the value of each Counter in the list -- so we'll end up with
+something like /0/1/5 or whatever. When we recreate that, we won't
+necessarily have the same IDs, but that doesn't matter for this example.
+If it mattered, we'd have to do this a different way.
+-}
 delta2update : Model -> Model -> Maybe HashUpdate
 delta2update previous current =
     -- We'll take advantage of the fact that we know that the counter

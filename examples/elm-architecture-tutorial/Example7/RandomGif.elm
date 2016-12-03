@@ -9,23 +9,22 @@ import Task
 
 
 -- MODEL
--- In the advanced example, it's easier to track the gifUrl as a Maybe String
--- and apply the default value later, since the default value is really a
--- question for the view, rather than the model.
 
 
+{-| In the advanced example, it's easier to track the gifUrl as a Maybe String
+and apply the default value later, since the default value is really a
+question for the view, rather than the model.
+-}
 type alias Model =
     { topic : String
     , gifUrl : Maybe String
     }
 
 
-
--- We provide for initializing with the gifUrl already set, since that is how
--- the routing will do it. If the gifUrl is provided, then we skip getting a
--- random one.
-
-
+{-| We provide for initializing with the gifUrl already set, since that is how
+the routing will do it. If the gifUrl is provided, then we skip getting a
+random one.
+-}
 init : String -> Maybe String -> ( Model, Cmd Action )
 init topic gifUrl =
     ( Model topic gifUrl
@@ -102,24 +101,24 @@ imgStyle url =
 -- EFFECTS
 
 
-urlWithArgs : String -> List (String, String) -> String
+urlWithArgs : String -> List ( String, String ) -> String
 urlWithArgs baseUrl args =
-  case args of
-    [] ->
-        baseUrl
+    case args of
+        [] ->
+            baseUrl
 
-    _ ->
-        baseUrl ++ "?" ++ String.join "&" (List.map queryPair args)
+        _ ->
+            baseUrl ++ "?" ++ String.join "&" (List.map queryPair args)
 
 
-queryPair : (String,String) -> String
-queryPair (key,value) =
-  queryEscape key ++ "=" ++ queryEscape value
+queryPair : ( String, String ) -> String
+queryPair ( key, value ) =
+    queryEscape key ++ "=" ++ queryEscape value
 
 
 queryEscape : String -> String
 queryEscape string =
-  String.join "+" (String.split "%20" (Http.encodeUri string))
+    String.join "+" (String.split "%20" (Http.encodeUri string))
 
 
 getRandomGif : String -> Cmd Action
@@ -143,10 +142,11 @@ decodeUrl =
 
 
 -- Routing
--- Instead of using the same signature all the way down, we'll simplify this
--- case a little.
 
 
+{-| Instead of using the same signature all the way down, we'll simplify this
+case a little.
+-}
 encodeLocation : Model -> Maybe (List String)
 encodeLocation model =
     -- Don't encode if there's no gifUrl

@@ -15,10 +15,8 @@ type alias Model =
     Int
 
 
-
--- Added from Main.elm
-
-
+{-| Added from Main.elm
+-}
 init : Model
 init =
     0
@@ -26,10 +24,11 @@ init =
 
 
 -- UPDATE
--- We add a Set action for the advanced example, so that we
--- can restore a particular bookmarked state.
 
 
+{-| We add a Set action for the advanced example, so that we
+can restore a particular bookmarked state.
+-}
 type Action
     = Increment
     | Decrement
@@ -73,13 +72,11 @@ countStyle =
         ]
 
 
-
--- We add a separate function to get a title, which the ExampleViewer uses to
--- construct a table of contents. Sometimes, you might have a function of this
--- kind return `Html` instead, depending on where it makes sense to do some of
--- the construction.
-
-
+{-| We add a separate function to get a title, which the ExampleViewer uses to
+construct a table of contents. Sometimes, you might have a function of this
+kind return `Html` instead, depending on where it makes sense to do some of
+the construction.
+-}
 title : String
 title =
     "Counter"
@@ -87,19 +84,18 @@ title =
 
 
 -- Routing (Old API)
--- For delta2update, we provide our state as the value for the URL
 
 
+{-| For delta2update, we provide our state as the value for the URL.
+-}
 delta2update : Model -> Model -> Maybe HashUpdate
 delta2update previous current =
     Just <|
         RouteHash.set [ toString current ]
 
 
-
--- For location2action, we generate an action that will restore our state
-
-
+{-| For location2action, we generate an action that will restore our state.
+-}
 location2action : List String -> List Action
 location2action list =
     case list of
