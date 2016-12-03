@@ -222,17 +222,15 @@ type HistoryEntry
     | ModifyEntry
 
 
+{-| This is the router's part of the larger model.
 
--- This is the router's part of the larger model.
---
--- `reportedUrl` is the last Url reported to us via urlUpdate.
---
--- `expectedUrlUpdates` represents how many outstanding commands we've
--- sent to change the URL. We increment it when we send a command, and
--- decrement it when `urlUpdate` is called (unless it's already zero,
--- of course).
+`reportedUrl` is the last Url reported to us via urlUpdate.
 
-
+`expectedUrlUpdates` represents how many outstanding commands we've
+sent to change the URL. We increment it when we send a command, and
+decrement it when `urlUpdate` is called (unless it's already zero,
+of course).
+-}
 type alias RouterModel =
     { reportedUrl : Url
     , expectedUrlUpdates : Int
@@ -246,7 +244,6 @@ type alias Model user =
     { user : user
     , router : RouterModel
     }
-
 
 
 {-| This is the wrapper for RouteUrl's App's messages.
@@ -392,9 +389,10 @@ programWithFlags =
 
 
 -- IMPLEMENTATION
--- Call the provided view function with the user's part of the model
 
 
+{-| Call the provided view function with the user's part of the model
+-}
 view : AppWithFlags model msg flags -> Model model -> Html (Msg msg)
 view app model =
     Html.map UserMsg <| app.view model.user
@@ -405,10 +403,8 @@ view_ app model =
     Html.map UserMsg <| app.view model.user
 
 
-
--- Call the provided subscriptions function with the user's part of the model
-
-
+{-| Call the provided subscriptions function with the user's part of the model
+-}
 subscriptions : AppWithFlags model msg flags -> Model model -> Sub (Msg msg)
 subscriptions app model =
     Sub.map UserMsg <| app.subscriptions model.user
@@ -419,10 +415,8 @@ subscriptions_ app model =
     Sub.map UserMsg <| app.subscriptions model.user
 
 
-
--- Call the provided init function with the user's part of the model
-
-
+{-| Call the provided init function with the user's part of the model
+-}
 init : AppWithFlags model msg flags -> flags -> Location -> ( Model model, Cmd (Msg msg) )
 init app flags location =
     initImpl app.update app.location2messages location (app.init flags)
@@ -433,21 +427,21 @@ init_ app location =
     initImpl app.update app.location2messages location app.init
 
 
-
--- Common processing for init and init_, processing any messages
--- from the initial location.
-
-
-initImpl
-    : (msg -> model -> ( model, Cmd msg ))
+{-| Common processing for init and init_, processing any messages
+from the initial location.
+-}
+initImpl :
+    (msg -> model -> ( model, Cmd msg ))
     -> (Location -> List msg)
     -> Location
     -> ( model, Cmd msg )
     -> ( Model model, Cmd (Msg msg) )
 initImpl upd l2m location ( userModelFromFlags, commandFromFlags ) =
     let
-        locationMessages = l2m location
-        (userModelFromLocation, commands) =
+        locationMessages =
+            l2m location
+
+        ( userModelFromLocation, commands ) =
             Update.Extra.sequence upd locationMessages ( userModelFromFlags, commandFromFlags )
 
         routerModel =
@@ -462,10 +456,8 @@ initImpl upd l2m location ( userModelFromFlags, commandFromFlags ) =
         )
 
 
-
--- Interprets the UrlChange as a Cmd
-
-
+{-| Interprets the UrlChange as a Cmd
+-}
 urlChange2Cmd : UrlChange -> Cmd msg
 urlChange2Cmd change =
     change.url
@@ -482,21 +474,15 @@ mapUrl func c1 =
     { c1 | url = func c1.url }
 
 
-
--- Whether one Url is equal to another, for our purposes (that is, just comparing
--- the things we care about).
-
-
+{-| Whether one Url is equal to another, for our purposes (that is, just comparing
+the things we care about).
+-}
 eqUrl : Url -> Url -> Bool
 eqUrl u1 u2 =
-    u1.path
-        == u2.path
-        && u1.hasTrailingSlash
-        == u2.hasTrailingSlash
-        && u1.hash
-        == u2.hash
-        && (Dict.toList u1.query)
-        == (Dict.toList u2.query)
+    (u1.path == u2.path)
+        && (u1.hasTrailingSlash == u2.hasTrailingSlash)
+        && (u1.hash == u2.hash)
+        && (Dict.toList u1.query == Dict.toList u2.query)
 
 
 checkDistinctUrl : Url -> UrlChange -> Maybe UrlChange
@@ -517,10 +503,8 @@ url2path url =
             ""
 
 
-
--- Supplies the default path or query string, if needed
-
-
+{-| Supplies the default path or query string, if needed
+-}
 normalizeUrl : Url -> UrlChange -> UrlChange
 normalizeUrl old change =
     mapUrl
@@ -534,10 +518,8 @@ normalizeUrl old change =
         change
 
 
-
--- This is the normal `update` function we're providing to `Navigation`.
-
-
+{-| This is the normal `update` function we're providing to `Navigation`.
+-}
 update : AppWithFlags model msg flags -> Msg msg -> Model model -> ( Model model, Cmd (Msg msg) )
 update app msg model =
     updateImpl app.update app.location2messages app.delta2url msg model
@@ -548,13 +530,11 @@ update_ app msg model =
     updateImpl app.update app.location2messages app.delta2url msg model
 
 
-
--- Common processing for the app's update function.
-
-
-updateImpl
-    : (msg -> model -> ( model, Cmd msg ))
-    -> ( Location -> List msg )
+{-| Common processing for the app's update function.
+-}
+updateImpl :
+    (msg -> model -> ( model, Cmd msg ))
+    -> (Location -> List msg)
     -> (model -> model -> Maybe UrlChange)
     -> Msg msg
     -> Model model
@@ -597,14 +577,12 @@ updateImpl upd l2m d2u msg model =
                         )
 
 
-
--- This is the function which decides whether to tell the calling application's
--- `location2messages` method if a really new location has been sent to
--- us from outside the app.
-
-
-urlUpdateImpl
-    : (msg -> model -> ( model, Cmd msg ))
+{-| This is the function which decides whether to tell the calling application's
+`location2messages` method if a really new location has been sent to
+us from outside the app.
+-}
+urlUpdateImpl :
+    (msg -> model -> ( model, Cmd msg ))
     -> (Location -> List msg)
     -> Location
     -> Model model
@@ -638,8 +616,10 @@ urlUpdateImpl upd l2m location model =
             -- typing in the location bar, following a bookmark. So, we need to update
             -- the app's state to correspond to the new location.
             let
-                locationMessages = l2m location
-                (userModelFromLocation, commands) =
+                locationMessages =
+                    l2m location
+
+                ( userModelFromLocation, commands ) =
                     Update.Extra.sequence upd locationMessages ( model.user, Cmd.none )
             in
                 ( { user = userModelFromLocation
