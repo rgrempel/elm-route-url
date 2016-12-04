@@ -346,11 +346,11 @@ However, `NavigationApp` could be useful if you want to do any further wrapping
 of its functions.
 -}
 type alias NavigationApp model msg =
-    { locationToMessage : Location -> WrappedMsg msg
-    , init : Location -> ( WrappedModel model, Cmd (WrappedMsg msg) )
-    , update : WrappedMsg msg -> WrappedModel model -> ( WrappedModel model, Cmd (WrappedMsg msg) )
-    , view : WrappedModel model -> Html (WrappedMsg msg)
-    , subscriptions : WrappedModel model -> Sub (WrappedMsg msg)
+    { locationToMessage : Location -> msg
+    , init : Location -> ( model, Cmd msg )
+    , update : msg -> model -> ( model, Cmd msg )
+    , view : model -> Html msg
+    , subscriptions : model -> Sub msg
     }
 
 
@@ -365,11 +365,11 @@ However, `NavigationAppWithFlags` could be useful if you want to do any further 
 of its functions.
 -}
 type alias NavigationAppWithFlags model msg flags =
-    { locationToMessage : Location -> WrappedMsg msg
-    , init : flags -> Location -> ( WrappedModel model, Cmd (WrappedMsg msg) )
-    , update : WrappedMsg msg -> WrappedModel model -> ( WrappedModel model, Cmd (WrappedMsg msg) )
-    , view : WrappedModel model -> Html (WrappedMsg msg)
-    , subscriptions : WrappedModel model -> Sub (WrappedMsg msg)
+    { locationToMessage : Location -> msg
+    , init : flags -> Location -> ( model, Cmd msg )
+    , update : msg -> model -> ( model, Cmd msg )
+    , view : model -> Html msg
+    , subscriptions : model -> Sub msg
     }
 
 
@@ -380,7 +380,7 @@ requires.
 
 Normally, you don't need this -- you can just use [`program`](#program).
 -}
-navigationApp : App model msg -> NavigationApp model msg
+navigationApp : App model msg -> NavigationApp (WrappedModel model) (WrappedMsg msg)
 navigationApp app =
     let
         common =
@@ -401,7 +401,7 @@ requires.
 
 Normally, you don't need this -- you can just use [`programWithFlags`](#programWithFlags).
 -}
-navigationAppWithFlags : AppWithFlags model msg flags -> NavigationAppWithFlags model msg flags
+navigationAppWithFlags : AppWithFlags model msg flags -> NavigationAppWithFlags (WrappedModel model) (WrappedMsg msg) flags
 navigationAppWithFlags app =
     let
         common =
@@ -424,7 +424,7 @@ configuration to a `Program`. You would only want `runNavigationApp` for the
 sake of composability -- that is, in case there is something further you want
 to do with the `NavigationApp` structure before turning it into a `Program`.
 -}
-runNavigationApp : NavigationApp model msg -> Program Never (WrappedModel model) (WrappedMsg msg)
+runNavigationApp : NavigationApp model msg -> Program Never model msg
 runNavigationApp app =
     Navigation.program app.locationToMessage
         { init = app.init
@@ -443,7 +443,7 @@ configuration to a `Program`. You would only want `runNavigationApp` for the
 sake of composability -- that is, in case there is something further you want
 to do with the `NavigationApp` structure before turning it into a `Program`.
 -}
-runNavigationAppWithFlags : NavigationAppWithFlags model msg flags -> Program flags (WrappedModel model) (WrappedMsg msg)
+runNavigationAppWithFlags : NavigationAppWithFlags model msg flags -> Program flags model msg
 runNavigationAppWithFlags app =
     Navigation.programWithFlags app.locationToMessage
         { init = app.init
