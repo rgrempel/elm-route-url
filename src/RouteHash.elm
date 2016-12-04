@@ -96,7 +96,7 @@ hashUpdate2urlChange prefix hashUpdate =
 location, creating a new history entry.
 
 The `List String` represents the hash portion of the location. Each element of
-the list will be encodeUrid, and then the list will be joined using slashes
+the list will be uri-encoded, and then the list will be joined using slashes
 ("/"). Finally, a prefix will be applied (by [default](#defaultPrefix), "#!/",
 but it is configurable).
 -}
@@ -109,7 +109,7 @@ set =
 location, replacing the current history entry.
 
 The `List String` represents the hash portion of the location. Each element of
-the list will be encodeUrid, and then the list will be joined using slashes
+the list will be uri-encoded, and then the list will be joined using slashes
 ("/"). Finally, a prefix will be applied (by [default](#defaultPrefix), "#!/",
 but it is configurable).
 -}
@@ -186,7 +186,7 @@ extract action =
     This module will normalize the `List String` in the update in the following
     way before setting the actual location. It will:
 
-    * encodeUri the strings
+    * uri-encode the strings
     * join them with "/"
     * add the `prefix` to the beginning
 
@@ -207,7 +207,7 @@ extract action =
     The argument is a normalized version of the hash portion of the location.
     First, the `prefix` is stripped from the hash, and then the result is
     converted to a `List String` by using '/' as a delimiter. Then, each
-    `String` value is decodeUrid.
+    `String` value is uri-deocded.
 
     Essentially, your `location2action` should return actions that are the
     reverse of what your `delta2update` function produced. That is, the
@@ -299,7 +299,7 @@ delta2url config old new =
         (config.delta2update old new)
 
 
-{-| Takes your configuration, and turns it into an `AppWithFlags`.
+{-| Takes your configuration, and turns it into an `App`.
 
 Usually you won't need this -- you can just use [`program`](#program) to
 go directly to a `Program` instead.
