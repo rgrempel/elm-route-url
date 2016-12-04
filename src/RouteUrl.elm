@@ -8,8 +8,10 @@ module RouteUrl
         , HistoryEntry(NewEntry, ModifyEntry)
         , NavigationApp
         , navigationApp
-        , navigationAppWithFlags
         , runNavigationApp
+        , NavigationAppWithFlags
+        , navigationAppWithFlags
+        , runNavigationAppWithFlags
         , WrappedModel
         , unwrapModel
         , mapModel
@@ -66,9 +68,8 @@ If your initialization needs are more complex, you may find some of the
 remaining types and function to be of interest. You won't usually
 need them.
 
-@docs NavigationApp
-@docs navigationApp, navigationAppWithFlags
-@docs runNavigationApp
+@docs NavigationApp, navigationApp, runNavigationApp
+@docs NavigationAppWithFlags, navigationAppWithFlags, runNavigationAppWithFlags
 @docs WrappedModel, unwrapModel, mapModel
 @docs WrappedMsg, unwrapMsg, wrapUserMsg, wrapLocation
 -}
@@ -159,6 +160,38 @@ type alias AppWithFlags model msg flags =
     , update : msg -> model -> ( model, Cmd msg )
     , subscriptions : model -> Sub msg
     , view : model -> Html msg
+    }
+
+
+{-| This works around an issue in Elm 0.18 using `programWithFlags` when
+you are actually intending to ignore the flags. It's a long story.
+-}
+type alias AppCommon model msg =
+    { delta2url : model -> model -> Maybe UrlChange
+    , location2messages : Location -> List msg
+    , update : msg -> model -> ( model, Cmd msg )
+    , subscriptions : model -> Sub msg
+    , view : model -> Html msg
+    }
+
+
+app2Common : App model msg -> AppCommon model msg
+app2Common app =
+    { delta2url = app.delta2url
+    , location2messages = app.location2messages
+    , update = app.update
+    , subscriptions = app.subscriptions
+    , view = app.view
+    }
+
+
+appWithFlags2Common : AppWithFlags model msg flags -> AppCommon model msg
+appWithFlags2Common app =
+    { delta2url = app.delta2url
+    , location2messages = app.location2messages
+    , update = app.update
+    , subscriptions = app.subscriptions
+    , view = app.view
     }
 
 
@@ -303,7 +336,7 @@ wrapLocation =
 
 
 {-| A type which represents the various inputs to
-[`Navigation.programWithFlags`](http://package.elm-lang.org/packages/elm-lang/navigation/2.0.0/Navigation#programWithFlags).
+[`Navigation.program`](http://package.elm-lang.org/packages/elm-lang/navigation/2.0.0/Navigation#program).
 
 You can produce this via [`navigationApp`](#navigationApp). Then, you can supply
 this to [`runNavigationApp`](#runNavigationApp) in order to create a `Program`.
@@ -312,7 +345,26 @@ Normally you don't need this -- you can just use [`program`](#program).
 However, `NavigationApp` could be useful if you want to do any further wrapping
 of its functions.
 -}
-type alias NavigationApp model msg flags =
+type alias NavigationApp model msg =
+    { locationToMessage : Location -> WrappedMsg msg
+    , init : Location -> ( WrappedModel model, Cmd (WrappedMsg msg) )
+    , update : WrappedMsg msg -> WrappedModel model -> ( WrappedModel model, Cmd (WrappedMsg msg) )
+    , view : WrappedModel model -> Html (WrappedMsg msg)
+    , subscriptions : WrappedModel model -> Sub (WrappedMsg msg)
+    }
+
+
+{-| A type which represents the various inputs to
+[`Navigation.programWithFlags`](http://package.elm-lang.org/packages/elm-lang/navigation/2.0.0/Navigation#programWithFlags).
+
+You can produce this via [`navigationAppWithFlags`](#navigationAppWithFlags). Then, you can supply
+this to [`runNavigationAppWithFlags`](#runNavigationAppWithFlags) in order to create a `Program`.
+
+Normally you don't need this -- you can just use [`programWithFlags`](#programWithFlags).
+However, `NavigationAppWithFlags` could be useful if you want to do any further wrapping
+of its functions.
+-}
+type alias NavigationAppWithFlags model msg flags =
     { locationToMessage : Location -> WrappedMsg msg
     , init : flags -> Location -> ( WrappedModel model, Cmd (WrappedMsg msg) )
     , update : WrappedMsg msg -> WrappedModel model -> ( WrappedModel model, Cmd (WrappedMsg msg) )
@@ -323,15 +375,23 @@ type alias NavigationApp model msg flags =
 
 {-| Given your configuration, this function does some wrapping and produces
 the functions which
-[`Navigation.programWithFlags`](http://package.elm-lang.org/packages/elm-lang/navigation/2.0.0/Navigation#programWithFlags)
+[`Navigation.program`](http://package.elm-lang.org/packages/elm-lang/navigation/2.0.0/Navigation#program)
 requires.
 
 Normally, you don't need this -- you can just use [`program`](#program).
 -}
-navigationApp : App model msg -> NavigationApp model msg Never
+navigationApp : App model msg -> NavigationApp model msg
 navigationApp app =
-    navigationAppWithFlags
-        { app | init = always app.init }
+    let
+        common =
+            app2Common app
+    in
+        { locationToMessage = RouterMsg
+        , init = init app.init common
+        , update = update common
+        , view = view common
+        , subscriptions = subscriptions common
+        }
 
 
 {-| Given your configuration, this function does some wrapping and produces
@@ -341,14 +401,18 @@ requires.
 
 Normally, you don't need this -- you can just use [`programWithFlags`](#programWithFlags).
 -}
-navigationAppWithFlags : AppWithFlags model msg flags -> NavigationApp model msg flags
+navigationAppWithFlags : AppWithFlags model msg flags -> NavigationAppWithFlags model msg flags
 navigationAppWithFlags app =
-    { locationToMessage = RouterMsg
-    , init = init app
-    , update = update app
-    , view = view app
-    , subscriptions = subscriptions app
-    }
+    let
+        common =
+            appWithFlags2Common app
+    in
+        { locationToMessage = RouterMsg
+        , init = initWithFlags app.init common
+        , update = update common
+        , view = view common
+        , subscriptions = subscriptions common
+        }
 
 
 {-| Turns the output from [`navigationApp`](#navigationApp)
@@ -360,8 +424,27 @@ configuration to a `Program`. You would only want `runNavigationApp` for the
 sake of composability -- that is, in case there is something further you want
 to do with the `NavigationApp` structure before turning it into a `Program`.
 -}
-runNavigationApp : NavigationApp model msg flags -> Program flags (WrappedModel model) (WrappedMsg msg)
+runNavigationApp : NavigationApp model msg -> Program Never (WrappedModel model) (WrappedMsg msg)
 runNavigationApp app =
+    Navigation.program app.locationToMessage
+        { init = app.init
+        , update = app.update
+        , view = app.view
+        , subscriptions = app.subscriptions
+        }
+
+
+{-| Turns the output from [`navigationApp`](#navigationApp)
+into a `Program` that you can assign to your `main` function.
+
+For convenience, you will usually want to just use [`program`](#program),
+which goes directly from the required
+configuration to a `Program`. You would only want `runNavigationApp` for the
+sake of composability -- that is, in case there is something further you want
+to do with the `NavigationApp` structure before turning it into a `Program`.
+-}
+runNavigationAppWithFlags : NavigationAppWithFlags model msg flags -> Program flags (WrappedModel model) (WrappedMsg msg)
+runNavigationAppWithFlags app =
     Navigation.programWithFlags app.locationToMessage
         { init = app.init
         , update = app.update
@@ -383,7 +466,7 @@ program =
 -}
 programWithFlags : AppWithFlags model msg flags -> Program flags (WrappedModel model) (WrappedMsg msg)
 programWithFlags =
-    runNavigationApp << navigationAppWithFlags
+    runNavigationAppWithFlags << navigationAppWithFlags
 
 
 
@@ -392,26 +475,46 @@ programWithFlags =
 
 {-| Call the provided view function with the user's part of the model
 -}
-view : AppWithFlags model msg flags -> WrappedModel model -> Html (WrappedMsg msg)
+view : AppCommon model msg -> WrappedModel model -> Html (WrappedMsg msg)
 view app (WrappedModel model _) =
-    Html.map UserMsg <| app.view model
+    app.view model
+        |> Html.map UserMsg
 
 
 {-| Call the provided subscriptions function with the user's part of the model
 -}
-subscriptions : AppWithFlags model msg flags -> WrappedModel model -> Sub (WrappedMsg msg)
+subscriptions : AppCommon model msg -> WrappedModel model -> Sub (WrappedMsg msg)
 subscriptions app (WrappedModel model _) =
-    Sub.map UserMsg <| app.subscriptions model
+    app.subscriptions model
+        |> Sub.map UserMsg
 
 
 {-| Call the provided init function with the user's part of the model
 -}
-init : AppWithFlags model msg flags -> flags -> Location -> ( WrappedModel model, Cmd (WrappedMsg msg) )
-init app flags location =
+initWithFlags : (flags -> ( model, Cmd msg )) -> AppCommon model msg -> flags -> Location -> ( WrappedModel model, Cmd (WrappedMsg msg) )
+initWithFlags appInit app flags location =
     let
         ( userModel, command ) =
-            app.init flags
+            appInit flags
                 |> sequence app.update (app.location2messages location)
+
+        routerModel =
+            { expectedUrlChanges = 0
+            , reportedUrl = Erl.parse location.href
+            }
+    in
+        ( WrappedModel userModel routerModel
+        , Cmd.map UserMsg command
+        )
+
+
+{-| Call the provided init function with the user's part of the model
+-}
+init : ( model, Cmd msg ) -> AppCommon model msg -> Location -> ( WrappedModel model, Cmd (WrappedMsg msg) )
+init appInit app location =
+    let
+        ( userModel, command ) =
+            sequence app.update (app.location2messages location) appInit
 
         routerModel =
             { expectedUrlChanges = 0
@@ -487,7 +590,7 @@ normalizeUrl old change =
 
 {-| This is the normal `update` function we're providing to `Navigation`.
 -}
-update : AppWithFlags model msg flags -> WrappedMsg msg -> WrappedModel model -> ( WrappedModel model, Cmd (WrappedMsg msg) )
+update : AppCommon model msg -> WrappedMsg msg -> WrappedModel model -> ( WrappedModel model, Cmd (WrappedMsg msg) )
 update app msg (WrappedModel user router) =
     case msg of
         RouterMsg location ->
