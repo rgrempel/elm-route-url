@@ -65,7 +65,6 @@ import RouteUrl
         , navigationApp
         , navigationAppWithFlags
         , runNavigationApp
-        , runNavigationAppWithFlags
         )
 
 
@@ -327,7 +326,7 @@ used in your `main` function.
 -}
 programWithFlags : ConfigWithFlags model msg flags -> Program flags (WrappedModel model) (WrappedMsg msg)
 programWithFlags =
-    runNavigationAppWithFlags << navigationAppWithFlags << appWithFlags
+    runNavigationApp << navigationAppWithFlags << appWithFlags
 
 
 {-| Remove the character from the string if it is the first character
