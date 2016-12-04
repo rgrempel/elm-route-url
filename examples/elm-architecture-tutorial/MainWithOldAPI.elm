@@ -1,8 +1,10 @@
+module Main exposing (..)
+
 import ExampleViewer
 import RouteHash
 
 
-main : Program Never
+main : Program Never (RouteHash.Model ExampleViewer.Model) (RouteHash.Msg ExampleViewer.Action)
 main =
     RouteHash.program
         { prefix = RouteHash.defaultPrefix

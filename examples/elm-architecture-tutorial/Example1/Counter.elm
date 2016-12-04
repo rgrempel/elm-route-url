@@ -10,18 +10,26 @@ import String exposing (toInt)
 
 -- MODEL
 
-type alias Model = Int
+
+type alias Model =
+    Int
+
 
 
 -- Added from Main.elm
+
+
 init : Model
-init = 0
+init =
+    0
+
 
 
 -- UPDATE
-
 -- We add a Set action for the advanced example, so that we
 -- can restore a particular bookmarked state.
+
+
 type Action
     = Increment
     | Decrement
@@ -30,52 +38,68 @@ type Action
 
 update : Action -> Model -> Model
 update action model =
-  case action of
-    Increment -> model + 1
-    Decrement -> model - 1
-    Set value -> value
+    case action of
+        Increment ->
+            model + 1
+
+        Decrement ->
+            model - 1
+
+        Set value ->
+            value
+
 
 
 -- VIEW
 
+
 view : Model -> Html Action
 view model =
-  div []
-    [ button [ onClick Decrement ] [ text "-" ]
-    , div [ countStyle ] [ text (toString model) ]
-    , button [ onClick Increment ] [ text "+" ]
-    ]
+    div []
+        [ button [ onClick Decrement ] [ text "-" ]
+        , div [ countStyle ] [ text (toString model) ]
+        , button [ onClick Increment ] [ text "+" ]
+        ]
 
 
 countStyle : Attribute any
 countStyle =
-  style
-    [ ("font-size", "20px")
-    , ("font-family", "monospace")
-    , ("display", "inline-block")
-    , ("width", "50px")
-    , ("text-align", "center")
-    ]
+    style
+        [ ( "font-size", "20px" )
+        , ( "font-family", "monospace" )
+        , ( "display", "inline-block" )
+        , ( "width", "50px" )
+        , ( "text-align", "center" )
+        ]
+
 
 
 -- We add a separate function to get a title, which the ExampleViewer uses to
 -- construct a table of contents. Sometimes, you might have a function of this
 -- kind return `Html` instead, depending on where it makes sense to do some of
 -- the construction.
+
+
 title : String
-title = "Counter"
+title =
+    "Counter"
+
 
 
 -- Routing (Old API)
-
 -- For delta2update, we provide our state as the value for the URL
+
+
 delta2update : Model -> Model -> Maybe HashUpdate
 delta2update previous current =
     Just <|
-        RouteHash.set [toString current]
+        RouteHash.set [ toString current ]
+
 
 
 -- For location2action, we generate an action that will restore our state
+
+
 location2action : List String -> List Action
 location2action list =
     case list of
@@ -94,13 +118,15 @@ location2action list =
             []
 
 
+
 -- Routing (New API)
+
 
 delta2builder : Model -> Model -> Maybe Builder
 delta2builder previous current =
     builder
-    |> replacePath [toString current]
-    |> Just
+        |> replacePath [ toString current ]
+        |> Just
 
 
 builder2messages : Builder -> List Action

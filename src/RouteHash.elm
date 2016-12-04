@@ -1,10 +1,21 @@
-module RouteHash exposing
-    ( HashUpdate, set, replace, apply, map, extract
-    , Config, ConfigWithFlags, defaultPrefix
-    , app, appWithFlags
-    , program, programWithFlags
-    )
-
+module RouteHash
+    exposing
+        ( HashUpdate
+        , set
+        , replace
+        , apply
+        , map
+        , extract
+        , Model
+        , Msg
+        , Config
+        , ConfigWithFlags
+        , defaultPrefix
+        , app
+        , appWithFlags
+        , program
+        , programWithFlags
+        )
 
 {-| This module implements the old elm-route-hash API as closely as possible,
 given the changes required for elm-route-url.
@@ -40,17 +51,24 @@ be removed in a future version of elm-route-url.
 
 -}
 
-
 import String exposing (uncons, split)
-import Http exposing (uriDecode, uriEncode)
+import Http exposing (decodeUri, encodeUri)
 import Html exposing (Html)
 import Navigation exposing (Location)
-
-import RouteUrl exposing
-    ( NavigationApp, App, AppWithFlags
-    , UrlChange, HistoryEntry(NewEntry, ModifyEntry)
-    , runNavigationApp
-    )
+import RouteUrl
+    exposing
+        ( NavigationApp
+        , App
+        , AppWithFlags
+        , Model
+        , Msg
+        , UrlChange
+        , HistoryEntry(NewEntry, ModifyEntry)
+        , navigationApp
+        , navigationAppWithFlags
+        , runNavigationApp
+        , runNavigationAppWithFlags
+        )
 
 
 {-| An opaque type which represents an update to the hash portion of the
@@ -59,6 +77,12 @@ browser's location.
 type HashUpdate
     = SetPath (List String)
     | ReplacePath (List String)
+
+
+type alias Model model = RouteUrl.Model model
+
+
+type alias Msg msg = RouteUrl.Msg msg
 
 
 hashUpdate2urlChange : String -> HashUpdate -> UrlChange
@@ -79,27 +103,30 @@ hashUpdate2urlChange prefix hashUpdate =
 location, creating a new history entry.
 
 The `List String` represents the hash portion of the location. Each element of
-the list will be uriEncoded, and then the list will be joined using slashes
+the list will be encodeUrid, and then the list will be joined using slashes
 ("/"). Finally, a prefix will be applied (by [default](#defaultPrefix), "#!/",
 but it is configurable).
 -}
 set : List String -> HashUpdate
-set = SetPath
+set =
+    SetPath
 
 
 {-| Returns a [`HashUpdate`](#HashUpdate) that will update the browser's
 location, replacing the current history entry.
 
 The `List String` represents the hash portion of the location. Each element of
-the list will be uriEncoded, and then the list will be joined using slashes
+the list will be encodeUrid, and then the list will be joined using slashes
 ("/"). Finally, a prefix will be applied (by [default](#defaultPrefix), "#!/",
 but it is configurable).
 -}
 replace : List String -> HashUpdate
-replace = ReplacePath
+replace =
+    ReplacePath
 
 
-{-| Applies the supplied function to the [`HashUpdate`](#HashUpdate). -}
+{-| Applies the supplied function to the [`HashUpdate`](#HashUpdate).
+-}
 apply : (List String -> List String) -> HashUpdate -> HashUpdate
 apply func update =
     case update of
@@ -129,10 +156,12 @@ the `map` function allows you to dispatch `delta2update` to a lower-level module
 and then modify the `Maybe HashUpdate` which it returns.
 -}
 map : (List String -> List String) -> Maybe HashUpdate -> Maybe HashUpdate
-map = Maybe.map << apply
+map =
+    Maybe.map << apply
 
 
-{-| Extracts the `List String` from the [`HashUpdate`](#HashUpdate). -}
+{-| Extracts the `List String` from the [`HashUpdate`](#HashUpdate).
+-}
 extract : HashUpdate -> List String
 extract action =
     case action of
@@ -164,7 +193,7 @@ extract action =
     This module will normalize the `List String` in the update in the following
     way before setting the actual location. It will:
 
-    * uriEncode the strings
+    * encodeUri the strings
     * join them with "/"
     * add the `prefix` to the beginning
 
@@ -185,7 +214,7 @@ extract action =
     The argument is a normalized version of the hash portion of the location.
     First, the `prefix` is stripped from the hash, and then the result is
     converted to a `List String` by using '/' as a delimiter. Then, each
-    `String` value is uriDecoded.
+    `String` value is decodeUrid.
 
     Essentially, your `location2action` should return actions that are the
     reverse of what your `delta2update` function produced. That is, the
@@ -202,27 +231,28 @@ extract action =
 
 *   The remaining functions (`init`, `update`, `subscriptions` and `view`)
     have the same meaning as they do in
-    [`Html.App.program`](http://package.elm-lang.org/packages/elm-lang/html/1.0.0/Html-App#program)
+    [`Html.program`](http://package.elm-lang.org/packages/elm-lang/html/2.0.0/Html#program)
     ... that is, you should provide what you normally provide to that function.
 -}
 type alias Config model msg =
     { prefix : String
     , delta2update : model -> model -> Maybe HashUpdate
     , location2action : List String -> List msg
-    , init : (model, Cmd msg)
-    , update : msg -> model -> (model, Cmd msg)
+    , init : ( model, Cmd msg )
+    , update : msg -> model -> ( model, Cmd msg )
     , subscriptions : model -> Sub msg
     , view : model -> Html msg
     }
 
 
-{-| Like [`Config`](#Config), but with flags. -}
+{-| Like [`Config`](#Config), but with flags.
+-}
 type alias ConfigWithFlags model msg flags =
     { prefix : String
     , delta2update : model -> model -> Maybe HashUpdate
     , location2action : List String -> List msg
-    , init : flags -> (model, Cmd msg)
-    , update : msg -> model -> (model, Cmd msg)
+    , init : flags -> ( model, Cmd msg )
+    , update : msg -> model -> ( model, Cmd msg )
     , subscriptions : model -> Sub msg
     , view : model -> Html msg
     }
@@ -232,16 +262,17 @@ type alias ConfigWithFlags model msg flags =
 `prefix` in your [`Config`](#Config). It is equal to "#!/".
 -}
 defaultPrefix : String
-defaultPrefix = "#!/"
+defaultPrefix =
+    "#!/"
 
 
-location2messages : ConfigWithFlags model msg flags -> Location -> List msg
-location2messages config location =
+location2messagesWithFlags : ConfigWithFlags model msg flags -> Location -> List msg
+location2messagesWithFlags config location =
     config.location2action (hash2list config.prefix location.hash)
 
 
-delta2url : ConfigWithFlags model msg flags -> model -> model -> Maybe UrlChange
-delta2url config old new =
+delta2urlWithFlags : ConfigWithFlags model msg flags -> model -> model -> Maybe UrlChange
+delta2urlWithFlags config old new =
     Maybe.map
         (hashUpdate2urlChange config.prefix)
         (config.delta2update old new)
@@ -254,6 +285,34 @@ go directly to a `Program` instead.
 -}
 appWithFlags : ConfigWithFlags model msg flags -> AppWithFlags model msg flags
 appWithFlags config =
+    { delta2url = delta2urlWithFlags config
+    , location2messages = location2messagesWithFlags config
+    , init = config.init
+    , update = config.update
+    , subscriptions = config.subscriptions
+    , view = config.view
+    }
+
+
+location2messages : Config model msg -> Location -> List msg
+location2messages config location =
+    config.location2action (hash2list config.prefix location.hash)
+
+
+delta2url : Config model msg -> model -> model -> Maybe UrlChange
+delta2url config old new =
+    Maybe.map
+        (hashUpdate2urlChange config.prefix)
+        (config.delta2update old new)
+
+
+{-| Takes your configuration, and turns it into an `AppWithFlags`.
+
+Usually you won't need this -- you can just use [`program`](#program) to
+go directly to a `Program` instead.
+-}
+app : Config model msg -> App model msg
+app config =
     { delta2url = delta2url config
     , location2messages = location2messages config
     , init = config.init
@@ -263,39 +322,32 @@ appWithFlags config =
     }
 
 
-{-| Takes your configuration, and turns it into an `AppWithFlags`.
-
-Usually you won't need this -- you can just use [`program`](#program) to
-go directly to a `Program` instead.
--}
-app : Config model msg -> AppWithFlags model msg Never
-app config =
-    appWithFlags
-        { config | init = \_ -> config.init }
-
-
 {-| Takes your configuration, and turns it into a `Program` that can be
 used in your `main` function.
 -}
-program : Config model msg -> Program Never
-program = runNavigationApp << RouteUrl.navigationAppWithFlags << app
+program : Config model msg -> Program Never (Model model) (Msg msg)
+program =
+    runNavigationApp << navigationApp << app
 
 
 {-| Takes your configuration, and turns it into a `Program flags` that can be
 used in your `main` function.
 -}
-programWithFlags : ConfigWithFlags model msg flags -> Program flags
-programWithFlags = runNavigationApp << RouteUrl.navigationAppWithFlags << appWithFlags
+programWithFlags : ConfigWithFlags model msg flags -> Program flags (Model model) (Msg msg)
+programWithFlags =
+    runNavigationAppWithFlags << navigationAppWithFlags << appWithFlags
 
 
-{-| Remove the character from the string if it is the first character -}
+{-| Remove the character from the string if it is the first character
+-}
 removeInitial : Char -> String -> String
 removeInitial initial original =
     case uncons original of
-        Just (first, rest) ->
-            if first == initial
-                then rest
-                else original
+        Just ( first, rest ) ->
+            if first == initial then
+                rest
+            else
+                original
 
         _ ->
             original
@@ -315,10 +367,11 @@ that were separated by a slash.
 -}
 hash2list : String -> String -> List String
 hash2list prefix =
-    removeInitialSequence prefix >> split "/" >> List.map uriDecode
+    removeInitialSequence prefix >> split "/" >> List.map (Maybe.withDefault "" << decodeUri)
 
 
-{-| The opposite of normalizeHash ... takes a list and turns it into a hash -}
+{-| The opposite of normalizeHash ... takes a list and turns it into a hash
+-}
 list2hash : String -> List String -> String
 list2hash prefix list =
-    prefix ++ String.join "/" (List.map uriEncode list)
+    prefix ++ String.join "/" (List.map encodeUri list)

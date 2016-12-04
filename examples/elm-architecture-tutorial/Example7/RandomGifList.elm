@@ -3,42 +3,43 @@ module Example7.RandomGifList exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Html.App exposing (map)
 import Json.Decode as Json
 import RouteHash exposing (HashUpdate)
 import RouteUrl.Builder exposing (Builder, builder, path, replacePath)
-
 import Example7.RandomGif as RandomGif
 
 
 -- MODEL
 
+
 type alias Model =
     { topic : String
-    , gifList : List (Int, RandomGif.Model)
+    , gifList : List ( Int, RandomGif.Model )
     , uid : Int
     }
 
 
-init : (Model, Cmd Action)
+init : ( Model, Cmd Action )
 init =
     ( Model "" [] 0
     , Cmd.none
     )
 
 
--- UPDATE
 
+-- UPDATE
 -- Add an action for the advanced example to set our state from a list
 -- of topics and gifUrls
+
+
 type Action
     = Topic String
     | Create
     | SubMsg Int RandomGif.Action
-    | Set (List (String, Maybe String))
+    | Set (List ( String, Maybe String ))
 
 
-update : Action -> Model -> (Model, Cmd Action)
+update : Action -> Model -> ( Model, Cmd Action )
 update message model =
     case message of
         Topic topic ->
@@ -48,11 +49,11 @@ update message model =
 
         Create ->
             let
-                (newRandomGif, fx) =
+                ( newRandomGif, fx ) =
                     RandomGif.init model.topic Nothing
 
                 newModel =
-                    Model "" (model.gifList ++ [(model.uid, newRandomGif)]) (model.uid + 1)
+                    Model "" (model.gifList ++ [ ( model.uid, newRandomGif ) ]) (model.uid + 1)
             in
                 ( newModel
                 , Cmd.map (SubMsg model.uid) fx
@@ -60,18 +61,19 @@ update message model =
 
         SubMsg msgId msg ->
             let
-                subUpdate ((id, randomGif) as entry) =
+                subUpdate (( id, randomGif ) as entry) =
                     if id == msgId then
                         let
-                            (newRandomGif, fx) = RandomGif.update msg randomGif
+                            ( newRandomGif, fx ) =
+                                RandomGif.update msg randomGif
                         in
-                            ( (id, newRandomGif)
+                            ( ( id, newRandomGif )
                             , Cmd.map (SubMsg id) fx
                             )
                     else
-                        (entry, Cmd.none)
+                        ( entry, Cmd.none )
 
-                (newGifList, fxList) =
+                ( newGifList, fxList ) =
                     model.gifList
                         |> List.map subUpdate
                         |> List.unzip
@@ -83,34 +85,38 @@ update message model =
         Set list ->
             let
                 inits =
-                    list |>
-                        List.map (\(topic, url) ->
-                            RandomGif.init topic url
-                        )
+                    list
+                        |> List.map
+                            (\( topic, url ) ->
+                                RandomGif.init topic url
+                            )
 
                 modelsAndEffects =
-                    inits |>
-                        List.indexedMap (\index item ->
-                            ( (index, fst item)
-                            , Cmd.map (SubMsg index) (snd item)
+                    inits
+                        |> List.indexedMap
+                            (\index item ->
+                                ( ( index, Tuple.first item )
+                                , Cmd.map (SubMsg index) (Tuple.second item)
+                                )
                             )
-                        )
 
-                (models, effects) =
+                ( models, effects ) =
                     List.unzip modelsAndEffects
-
             in
                 ( { model
-                        | gifList = models
-                        , uid = List.length models
+                    | gifList = models
+                    , uid = List.length models
                   }
                 , Cmd.batch effects
                 )
 
 
+
 -- VIEW
 
-(=>) = (,)
+
+(=>) =
+    (,)
 
 
 view : Model -> Html Action
@@ -134,20 +140,21 @@ view model =
         ]
 
 
-elementView : (Int, RandomGif.Model) -> Html Action
-elementView (id, model) =
-    map (SubMsg id) (RandomGif.view model)
+elementView : ( Int, RandomGif.Model ) -> Html Action
+elementView ( id, model ) =
+    Html.map (SubMsg id) (RandomGif.view model)
 
 
 inputStyle : Attribute any
 inputStyle =
     style
-        [ ("width", "100%")
-        , ("height", "40px")
-        , ("padding", "10px 0")
-        , ("font-size", "2em")
-        , ("text-align", "center")
+        [ ( "width", "100%" )
+        , ( "height", "40px" )
+        , ( "padding", "10px 0" )
+        , ( "font-size", "2em" )
+        , ( "text-align", "center" )
         ]
+
 
 
 onEnter : Action -> Attribute Action
@@ -155,12 +162,16 @@ onEnter action =
     on "keydown" <|
         Json.map
             (always action)
-            (Json.customDecoder keyCode is13)
+            (keyCode |> Json.andThen is13)
 
 
-is13 : Int -> Result String ()
+is13 : Int -> Json.Decoder ()
 is13 code =
-    if code == 13 then Ok () else Err "not the right key code"
+    if code == 13 then
+        Json.succeed ()
+    else
+        Json.fail "not the right key code"
+
 
 
 -- We add a separate function to get a title, which the ExampleViewer uses to
@@ -168,19 +179,24 @@ is13 code =
 -- kind return `Html` instead, depending on where it makes sense to do some of
 -- the construction. Or, you could track the title in the higher level module,
 -- if you prefer that.
+
+
 title : String
-title = "List of Random Gifs"
+title =
+    "List of Random Gifs"
+
 
 
 -- Routing (Old API)
-
 -- We record each thing in the gifList. Note that we don't track the ID's,
 -- since in this app there isn't any need to preserve them ... of course, we
 -- could track them if it mattered.
+
+
 delta2update : Model -> Model -> Maybe HashUpdate
 delta2update previous current =
     current.gifList
-        |> List.filterMap (snd >> RandomGif.encodeLocation)
+        |> List.filterMap (Tuple.second >> RandomGif.encodeLocation)
         |> List.concat
         |> RouteHash.set
         |> Just
@@ -189,41 +205,43 @@ delta2update previous current =
 location2action : List String -> List Action
 location2action list =
     [ Set <|
-        List.map (\(topic, url) ->
-            if url == ""
-                then (topic, Nothing)
-                else (topic, Just url)
-        )
-        (inTwos list)
+        List.map
+            (\( topic, url ) ->
+                if url == "" then
+                    ( topic, Nothing )
+                else
+                    ( topic, Just url )
+            )
+            (inTwos list)
     ]
 
 
-inTwos : List a -> List (a, a)
+inTwos : List a -> List ( a, a )
 inTwos list =
     let
         step sublist result =
             case sublist of
                 a :: b :: rest ->
-                    step rest ((a, b) :: result)
+                    step rest (( a, b ) :: result)
 
                 _ ->
                     result
-
     in
         List.reverse <|
             step list []
 
 
+
 -- Routing (New API)
+
 
 delta2builder : Model -> Model -> Maybe Builder
 delta2builder previous current =
     let
         path =
             current.gifList
-                |> List.filterMap (snd >> RandomGif.encodeLocation)
+                |> List.filterMap (Tuple.second >> RandomGif.encodeLocation)
                 |> List.concat
-
     in
         builder
             |> replacePath path
@@ -233,10 +251,12 @@ delta2builder previous current =
 builder2messages : Builder -> List Action
 builder2messages builder =
     [ Set <|
-        List.map (\(topic, url) ->
-            if url == ""
-                then (topic, Nothing)
-                else (topic, Just url)
-        )
-        (inTwos (path builder))
+        List.map
+            (\( topic, url ) ->
+                if url == "" then
+                    ( topic, Nothing )
+                else
+                    ( topic, Just url )
+            )
+            (inTwos (path builder))
     ]
