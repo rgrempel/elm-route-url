@@ -359,8 +359,10 @@ removeInitialSequence initial original =
 that were separated by a slash.
 -}
 hash2list : String -> String -> List String
-hash2list prefix =
-    removeInitialSequence prefix >> split "/" >> List.map (Maybe.withDefault "" << decodeUri)
+hash2list prefix hash =
+    removeInitialSequence prefix hash
+        |> split "/"
+        |> List.map (\part -> Maybe.withDefault part (decodeUri part))
 
 
 {-| The opposite of normalizeHash ... takes a list and turns it into a hash
