@@ -19,6 +19,7 @@ module RouteUrl
         , unwrapMsg
         , wrapUserMsg
         , wrapLocation
+        , RouteUrlProgram
         )
 
 {-| This module provides routing for single-page apps based on changes to the
@@ -60,7 +61,7 @@ The simplest way to use this module is to do something like this:
   create your `main` function, instead of their homonymous equivalents in
   [`Html`](http://package.elm-lang.org/packages/elm-lang/html/2.0.0/Html).
 
-@docs program, programWithFlags
+@docs program, programWithFlags, RouteUrlProgram
 
 # More complex initialization
 
@@ -453,10 +454,41 @@ runNavigationAppWithFlags app =
         }
 
 
+{-| A convenient alias for the `Program` type that lets you specify your
+type for the `model` and `msg` ... the alias takes care of the wrapping
+that `RouteUrl` supplies.
+
+For instance, suppose your `main` function would normally be typed like this:
+
+```
+main : Program Never Model Msg
+```
+
+Now, once you use `RouteUrl.program` to set things up, `RouteUrl` wraps your
+model and msg types, so that the signature for your `main` function would
+now be:
+
+```
+main : Program Never (WrappedModel Model) (WrappedMsg Msg)
+```
+
+But that's a little ugly. So, if you like, you can use the `RouteUrlProgram`
+alias like this:
+
+```
+main : RouteUrlProgram Never Model Msg
+```
+
+It's exactly the same type, but looks a little nicer.
+-}
+type alias RouteUrlProgram flags model msg =
+    Program flags (WrappedModel model) (WrappedMsg msg)
+
+
 {-| Turns your configuration into a `Program` that you can assign to your
 `main` function.
 -}
-program : App model msg -> Program Never (WrappedModel model) (WrappedMsg msg)
+program : App model msg -> RouteUrlProgram Never model msg
 program =
     runNavigationApp << navigationApp
 
@@ -464,7 +496,7 @@ program =
 {-| Turns your configuration into a `Program flags` that you can assign to your
 `main` function.
 -}
-programWithFlags : AppWithFlags model msg flags -> Program flags (WrappedModel model) (WrappedMsg msg)
+programWithFlags : AppWithFlags model msg flags -> RouteUrlProgram flags model msg
 programWithFlags =
     runNavigationAppWithFlags << navigationAppWithFlags
 

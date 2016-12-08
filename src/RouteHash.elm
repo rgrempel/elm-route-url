@@ -67,6 +67,7 @@ import RouteUrl
         , navigationAppWithFlags
         , runNavigationApp
         , runNavigationAppWithFlags
+        , RouteUrlProgram
         )
 
 
@@ -318,7 +319,7 @@ app config =
 {-| Takes your configuration, and turns it into a `Program` that can be
 used in your `main` function.
 -}
-program : Config model msg -> Program Never (WrappedModel model) (WrappedMsg msg)
+program : Config model msg -> RouteUrlProgram Never model msg
 program =
     runNavigationApp << navigationApp << app
 
@@ -326,7 +327,7 @@ program =
 {-| Takes your configuration, and turns it into a `Program flags` that can be
 used in your `main` function.
 -}
-programWithFlags : ConfigWithFlags model msg flags -> Program flags (WrappedModel model) (WrappedMsg msg)
+programWithFlags : ConfigWithFlags model msg flags -> RouteUrlProgram flags model msg
 programWithFlags =
     runNavigationAppWithFlags << navigationAppWithFlags << appWithFlags
 

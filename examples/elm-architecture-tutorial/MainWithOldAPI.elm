@@ -2,10 +2,10 @@ module Main exposing (..)
 
 import ExampleViewer exposing (Model, Action)
 import RouteHash
-import RouteUrl exposing (WrappedModel, WrappedMsg)
+import RouteUrl exposing (RouteUrlProgram)
 
 
-main : Program Never (WrappedModel Model) (WrappedMsg Action)
+main : RouteUrlProgram Never Model Action
 main =
     RouteHash.program
         { prefix = RouteHash.defaultPrefix
