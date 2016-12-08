@@ -6,8 +6,6 @@ module RouteHash
         , apply
         , map
         , extract
-        , Model
-        , Msg
         , Config
         , ConfigWithFlags
         , defaultPrefix
@@ -58,16 +56,18 @@ import Navigation exposing (Location)
 import RouteUrl
     exposing
         ( NavigationApp
+        , NavigationAppWithFlags
         , App
         , AppWithFlags
-        , Model
-        , Msg
+        , WrappedModel
+        , WrappedMsg
         , UrlChange
         , HistoryEntry(NewEntry, ModifyEntry)
         , navigationApp
         , navigationAppWithFlags
         , runNavigationApp
         , runNavigationAppWithFlags
+        , RouteUrlProgram
         )
 
 
@@ -77,12 +77,6 @@ browser's location.
 type HashUpdate
     = SetPath (List String)
     | ReplacePath (List String)
-
-
-type alias Model model = RouteUrl.Model model
-
-
-type alias Msg msg = RouteUrl.Msg msg
 
 
 hashUpdate2urlChange : String -> HashUpdate -> UrlChange
@@ -103,7 +97,7 @@ hashUpdate2urlChange prefix hashUpdate =
 location, creating a new history entry.
 
 The `List String` represents the hash portion of the location. Each element of
-the list will be encodeUrid, and then the list will be joined using slashes
+the list will be uri-encoded, and then the list will be joined using slashes
 ("/"). Finally, a prefix will be applied (by [default](#defaultPrefix), "#!/",
 but it is configurable).
 -}
@@ -116,7 +110,7 @@ set =
 location, replacing the current history entry.
 
 The `List String` represents the hash portion of the location. Each element of
-the list will be encodeUrid, and then the list will be joined using slashes
+the list will be uri-encoded, and then the list will be joined using slashes
 ("/"). Finally, a prefix will be applied (by [default](#defaultPrefix), "#!/",
 but it is configurable).
 -}
@@ -193,7 +187,7 @@ extract action =
     This module will normalize the `List String` in the update in the following
     way before setting the actual location. It will:
 
-    * encodeUri the strings
+    * uri-encode the strings
     * join them with "/"
     * add the `prefix` to the beginning
 
@@ -214,7 +208,7 @@ extract action =
     The argument is a normalized version of the hash portion of the location.
     First, the `prefix` is stripped from the hash, and then the result is
     converted to a `List String` by using '/' as a delimiter. Then, each
-    `String` value is decodeUrid.
+    `String` value is uri-deocded.
 
     Essentially, your `location2action` should return actions that are the
     reverse of what your `delta2update` function produced. That is, the
@@ -306,7 +300,7 @@ delta2url config old new =
         (config.delta2update old new)
 
 
-{-| Takes your configuration, and turns it into an `AppWithFlags`.
+{-| Takes your configuration, and turns it into an `App`.
 
 Usually you won't need this -- you can just use [`program`](#program) to
 go directly to a `Program` instead.
@@ -325,7 +319,7 @@ app config =
 {-| Takes your configuration, and turns it into a `Program` that can be
 used in your `main` function.
 -}
-program : Config model msg -> Program Never (Model model) (Msg msg)
+program : Config model msg -> RouteUrlProgram Never model msg
 program =
     runNavigationApp << navigationApp << app
 
@@ -333,7 +327,7 @@ program =
 {-| Takes your configuration, and turns it into a `Program flags` that can be
 used in your `main` function.
 -}
-programWithFlags : ConfigWithFlags model msg flags -> Program flags (Model model) (Msg msg)
+programWithFlags : ConfigWithFlags model msg flags -> RouteUrlProgram flags model msg
 programWithFlags =
     runNavigationAppWithFlags << navigationAppWithFlags << appWithFlags
 
@@ -366,8 +360,10 @@ removeInitialSequence initial original =
 that were separated by a slash.
 -}
 hash2list : String -> String -> List String
-hash2list prefix =
-    removeInitialSequence prefix >> split "/" >> List.map (Maybe.withDefault "" << decodeUri)
+hash2list prefix hash =
+    removeInitialSequence prefix hash
+        |> split "/"
+        |> List.map (\part -> Maybe.withDefault part (decodeUri part))
 
 
 {-| The opposite of normalizeHash ... takes a list and turns it into a hash

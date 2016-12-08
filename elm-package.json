@@ -8,6 +8,7 @@
     ],
     "exposed-modules": [
         "RouteUrl",
+        "RouteHash",
         "RouteUrl.Builder"
     ],
     "dependencies": {

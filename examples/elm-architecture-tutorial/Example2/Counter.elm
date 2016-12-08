@@ -32,10 +32,11 @@ init count =
 
 
 -- UPDATE
--- We add a Set action for the advanced example, so that we
--- can restore a particular bookmarked state.
 
 
+{-| We add a Set action for the advanced example, so that we
+can restore a particular bookmarked state.
+-}
 type Action
     = Increment
     | Decrement
@@ -81,19 +82,18 @@ countStyle =
 
 
 -- Routing (Old API)
--- For delta2update, we provide our state as the value for the URL
 
 
+{-| For delta2update, we provide our state as the value for the URL
+-}
 delta2update : Model -> Model -> Maybe HashUpdate
 delta2update previous current =
     Just <|
         RouteHash.set [ toString current ]
 
 
-
--- For location2action, we generate an action that will restore our state
-
-
+{-| For location2action, we generate an action that will restore our state
+-}
 location2action : List String -> List Action
 location2action list =
     case list of
@@ -113,18 +113,17 @@ location2action list =
 
 
 -- Routing (New API)
--- We'll just send back a string
 
 
+{-| We'll just send back a string
+-}
 delta2fragment : Model -> Model -> String
 delta2fragment previous current =
     toString current
 
 
-
--- We'll just take a string
-
-
+{-| We'll just take a string
+-}
 fragment2messages : String -> List Action
 fragment2messages fragment =
     case toInt fragment of

@@ -9,12 +9,6 @@ import RouteUrl.Builder as Builder exposing (Builder)
 import Navigation exposing (Location)
 
 
--- Note that the way we handle modularity here is a little more verbose than
--- is, strictly speaking, necessary -- if you want to see a more sophisticated
--- approach, take a look at my csrs-elm app. (In short, we would construct a
--- record for each `Example` and some inter-related functions to use those
--- records). But that can be a little hard to follow, so I thought I'd leave
--- things a little more verbose here for now.
 -- Note that I'm renaming these locally for simplicity.
 
 import Example1.Counter as Example1
@@ -28,9 +22,10 @@ import Example8.SpinSquarePair as Example8
 
 
 -- MODEL
--- We'll need to know which example we're showing at the moment.
 
 
+{-| We'll need to know which example we're showing at the moment.
+-}
 type Example
     = Example1
     | Example2
@@ -42,21 +37,19 @@ type Example
     | Example8
 
 
+{-| We need to collect all the data that each example wants to track. Now, we
+could do this in a couple of ways. If we want to remember all the data as we
+display one thing or another, we would do this as a record. If we wanted to
+only remember the data that we're currently looking at, we might do this as
+a union type. I'll do it the record way for now.
 
--- We need to collect all the data that each example wants to track. Now, we
--- could do this in a couple of ways. If we want to remember all the data as we
--- display one thing or another, we would do this as a record. If we wanted to
--- only remember the data that we're currently looking at, we might do this as
--- a union type. I'll do it the record way for now.
---
--- In a real app, you are likely to divide the model into parts which are
--- "permanent" (in the sense that the app needs to remember them, no matter
--- what the user is looking at now), and parts that are "transient" (which need
--- to be remembered, but only while the user is looking at a particular thing).
--- So, in that cae, some things would be in a record, whereas other things would
--- be in a union type.
-
-
+In a real app, you are likely to divide the model into parts which are
+"permanent" (in the sense that the app needs to remember them, no matter
+what the user is looking at now), and parts that are "transient" (which need
+to be remembered, but only while the user is looking at a particular thing).
+So, in that cae, some things would be in a record, whereas other things would
+be in a union type.
+-}
 type alias Model =
     { example1 : Example1.Model
     , example2 : Example2.Model
@@ -72,10 +65,8 @@ type alias Model =
     }
 
 
-
--- Now, to init our model, we have to collect each examples init
-
-
+{-| Now, to init our model, we have to collect each examples init
+-}
 init : ( Model, Cmd Action )
 init =
     let
@@ -106,9 +97,10 @@ init =
 
 
 -- SUBSCRIPTIONS
--- I happen to know that only Example8 uses them
 
 
+{-| I happen to know that only Example8 uses them
+-}
 subscriptions : Model -> Sub Action
 subscriptions model =
     Sub.map Example8Action (Example8.subscriptions model.example8)
@@ -308,16 +300,19 @@ view model =
 
 
 -- ROUTING
+--
 -- I've include demo code here for the old API, as well as the new API
 -- using the full URL or just using the hash. Just to be completely clear,
 -- you don't need all of these in practice ... you just pick one!
+--
 --------------------
 -- Old RouteHash API
 --------------------
--- If you have existing code using elm-route-hash, your `delta2update` function
--- should not require any changes.
 
 
+{-| If you have existing code using elm-route-hash, your `delta2update` function
+should not require any changes.
+-}
 delta2update : Model -> Model -> Maybe HashUpdate
 delta2update previous current =
     case current.currentExample of
@@ -356,12 +351,10 @@ delta2update previous current =
                 Example8.delta2update previous.example8 current.example8
 
 
-
--- Here, we basically do the reverse of what delta2update does. If you
--- have existing code using elm-route-hash, your `location2action` function
--- should not require any changes.
-
-
+{-| Here, we basically do the reverse of what delta2update does. If you
+have existing code using elm-route-hash, your `location2action` function
+should not require any changes.
+-}
 location2action : List String -> List Action
 location2action list =
     case list of
@@ -402,9 +395,10 @@ location2action list =
 -------------------
 -- New RouteUrl API
 -------------------
--- This is an example of the new API, if using the whole URL
 
 
+{-| This is an example of the new API, if using the whole URL
+-}
 delta2url : Model -> Model -> Maybe UrlChange
 delta2url previous current =
     -- We're using a `Builder` to build up the possible change. You don't
@@ -415,10 +409,8 @@ delta2url previous current =
         delta2builder previous current
 
 
-
--- An example of the new API, if just using the hash
-
-
+{-| An example of the new API, if just using the hash
+-}
 delta2hash : Model -> Model -> Maybe UrlChange
 delta2hash previous current =
     -- Here, we're re-using the Builder-oriented code, but stuffing everything
@@ -427,11 +419,9 @@ delta2hash previous current =
         delta2builder previous current
 
 
-
--- This is the common code that we rely on above. Again, you don't have to use
--- a `Builder` if you don't want to ... it's just one way to construct a `UrlChange`.
-
-
+{-| This is the common code that we rely on above. Again, you don't have to use
+a `Builder` if you don't want to ... it's just one way to construct a `UrlChange`.
+-}
 delta2builder : Model -> Model -> Maybe Builder
 delta2builder previous current =
     case current.currentExample of
@@ -470,11 +460,9 @@ delta2builder previous current =
                 |> Maybe.map (Builder.prependToPath [ "example-8" ])
 
 
-
--- This is an example of a `location2messages` function ... I'm calling it
--- `url2messages` to illustrate something that uses the full URL.
-
-
+{-| This is an example of a `location2messages` function ... I'm calling it
+`url2messages` to illustrate something that uses the full URL.
+-}
 url2messages : Location -> List Action
 url2messages location =
     -- You can parse the `Location` in whatever way you want. I'm making
@@ -484,11 +472,9 @@ url2messages location =
     builder2messages (Builder.fromUrl location.href)
 
 
-
--- This is an example of a `location2messages` function ... I'm calling it
--- `hash2messages` to illustrate something that uses just the hash.
-
-
+{-| This is an example of a `location2messages` function ... I'm calling it
+`hash2messages` to illustrate something that uses just the hash.
+-}
 hash2messages : Location -> List Action
 hash2messages location =
     -- You can parse the `Location` in whatever way you want. I'm making
@@ -498,10 +484,8 @@ hash2messages location =
     builder2messages (Builder.fromHash location.href)
 
 
-
--- Another example of a `location2messages` function, this time only using the hash.
-
-
+{-| Another example of a `location2messages` function, this time only using the hash.
+-}
 builder2messages : Builder -> List Action
 builder2messages builder =
     -- You can parse the `Location` in whatever way you want ... there are a

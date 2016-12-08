@@ -17,10 +17,8 @@ type alias Model =
     }
 
 
-
--- Rewrote to move initialization from Main.elm
-
-
+{-| Rewrote to move initialization from Main.elm
+-}
 init : Model
 init =
     { topCounter = Counter.init 0
@@ -68,13 +66,11 @@ view model =
         ]
 
 
-
--- We add a separate function to get a title, which the ExampleViewer uses to
--- construct a table of contents. Sometimes, you might have a function of this
--- kind return `Html` instead, depending on where it makes sense to do some of
--- the construction.
-
-
+{-| We add a separate function to get a title, which the ExampleViewer uses to
+construct a table of contents. Sometimes, you might have a function of this
+kind return `Html` instead, depending on where it makes sense to do some of
+the construction.
+-}
 title : String
 title =
     "Pair of Counters"
@@ -82,10 +78,11 @@ title =
 
 
 -- Routing (Old API)
--- To encode state in the URL, we'll just delegate & concatenate
--- This will produce partial URLs like /6/7
 
 
+{-| To encode state in the URL, we'll just delegate & concatenate
+This will produce partial URLs like /6/7
+-}
 delta2update : Model -> Model -> Maybe HashUpdate
 delta2update previous current =
     -- The implementation is not especially elegant ... perhaps
@@ -116,9 +113,10 @@ location2action list =
 
 
 -- Routing (New API)
--- We'll put the two counters in the query parameters, just for fun
 
 
+{-| We'll put the two counters in the query parameters, just for fun
+-}
 delta2builder : Model -> Model -> Maybe Builder
 delta2builder previous current =
     builder

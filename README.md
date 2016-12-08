@@ -2,12 +2,7 @@
 
 This is a module for routing single-page-apps in Elm, building on the
 [`elm-lang/navigation`](http://package.elm-lang.org/packages/elm-lang/navigation/latest)
-package. It is the successor to elm-route-hash:
-
-* now compatible with Elm 0.18, and
-
-* no longer limited to working only with the hash (hence the name change).
-
+package.
 
 ## Rationale
 
@@ -32,10 +27,12 @@ such as:
 * [Bogdanp/elm-route](http://package.elm-lang.org/packages/Bogdanp/elm-route/latest)
 * [etaque/elm-route-parser](http://package.elm-lang.org/packages/etaque/elm-route-parser/latest)
 * [poyang/elm-router](http://package.elm-lang.org/packages/poying/elm-router/latest)
+* [pzingg/elm-navigation-extra](http://package.elm-lang.org/packages/pzingg/elm-navigation-extra/latest)
 * [sporto/erl](http://package.elm-lang.org/packages/sporto/erl/latest)
 * [sporto/hop](http://package.elm-lang.org/packages/sporto/hop/latest)
 
-So, what does elm-route-url do differently than the others?
+So, what does elm-route-url do differently than the others? First, I'll
+address this practically, then philosophically.
 
 
 ### Mapping changes in the app state to a possible location change
@@ -58,6 +55,11 @@ for the location bar. After all, it doesn't matter how you got there -- all you
 want to ensure is that the URL reflects the final state of your model. (For
 instance, consider a module with an `Increment` message and a `Decrement`
 message. The URL doesn't care which way you arrived at a particular state).
+
+Furthermore, every state of your model really ought to correspond with some URL.
+That is, given some state of your model, there must be something that you'd like
+to have appear in the URL. Or, to put it another way, what appears in the URL
+really ought to be a function of your state, not the last message you received.
 
 So, elm-route-url asks you to implement a function with a different signature:
 
@@ -88,28 +90,45 @@ use elm-route-url, you don't have to.
 ### Mapping location changes to messages our app can respond to
 
 If you use the official [navigation](http://package.elm-lang.org/packages/elm-lang/navigation/latest)
-package in Elm 0.18 directly, the `Navgation.program` differs from the
-standard `Html.program` in two ways:
+package in Elm 0.18 directly, you react to location changes by providing
+an argument to `Navigation.program` which converts a `Location` to a message
+your app can deal with. Those messages are then fed into your `update` function
+as the `Location` changes.
 
-First, you are asked to implement an argument
-to `Navigation.program` that converts a `Location` to a message
-whenever the URL changes.
-
-Second, the `Navigation.program` takes an init function that
-takes a `Location` as an argument. This lets you use the URL on the first frame.
-
-In elm-route-url, this functionality for both of these is handled by asking
-you to implement a function with a different signature:
+On the surface, elm-route-url works in a similar manner, except that it
+asks you to implement a function which returns a list of messages.
+(This is possibly a convenience when you need multiple messages to
+react to the URL change, though of course you could also redesign your
+app to do multiple things with a single message).
 
 ```elm
 location2messages : Location -> List Message
 ```
 
-`location2messages` will be called when the underlying `Navigation.program`
-`init` method is invoked, so you don't need to change that in your
-program's code. And of course `location2messages` will also be called every
-time the location is changed externally (not from a state change that
-generated a new location via `delta2url`).
+`location2messages` will also be called when your `init` function is invoked,
+so you will also get access to the very first `Location`.
+
+So, that is similar to how `Navigation` works. The difference is that
+`Navigation` will send you a message even when you programmatically change
+the URL. By contrast, elm-route-url only sends you messsages for **external**
+changes to the URL -- for instance, the user clicking on a link, opening
+a bookmark, or typing in the address bar. You won't get a message when you've
+made a change in the URL due to your `delta2url` function, since your state
+is already in sync with that URL -- no message is required.
+
+
+### Philosphically
+
+You can, if you are so inclined, think about those differences in a more
+philosophical way. There is a [thread](https://groups.google.com/forum/#!topic/elm-discuss/KacB1VqkVJg/discussion)
+on the Elm mailing list where Erik Lott gives an excellent summary.
+The question, he says, is whether the address bar should drive the model,
+or whether the model should drive the address bar. For more details,
+read the thread -- it really is a very good summary.
+
+Another nice discussion of the philosophy behind elm-route-url is in a blog post
+by Amitai Burstein, under the heading
+[URL Change is not Routing](http://www.gizra.com/content/thinking-choosing-elm/#url-change-is-not-routing)
 
 
 ## API
@@ -127,6 +146,8 @@ moment. How you parse the `Location` (and construct a `UrlChange`) is pretty
 much up to you. Now, I have included a `RouteUrl.Builder` module that could
 help with those tasks. However, you don't need to use it -- many other
 approaches would be possible, and there are links to helpful packages above.
+For my own part, I've been using [evancz/url-parser](http://package.elm-lang.org/packages/evancz/url-parser/latest)
+recently to implement `location2messages`.
 
 The `RouteHash` module attempts to match the old API of elm-route-hash as
 closely as possible. You should be able to re-use your old `delta2update` and
