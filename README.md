@@ -27,6 +27,7 @@ such as:
 * [Bogdanp/elm-route](http://package.elm-lang.org/packages/Bogdanp/elm-route/latest)
 * [etaque/elm-route-parser](http://package.elm-lang.org/packages/etaque/elm-route-parser/latest)
 * [poyang/elm-router](http://package.elm-lang.org/packages/poying/elm-router/latest)
+* [pzingg/elm-navigation-extra](http://package.elm-lang.org/packages/pzingg/elm-navigation-extra/latest)
 * [sporto/erl](http://package.elm-lang.org/packages/sporto/erl/latest)
 * [sporto/hop](http://package.elm-lang.org/packages/sporto/hop/latest)
 

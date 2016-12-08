@@ -114,10 +114,6 @@ So, the "special" fields are the `delta2url` function and the
   returned from your `location2messages` function, since in that case the
   URL has already been set.
 
-  If you are familiar with elm-route-hash, `delta2url` is analogous to the old
-  `delta2update` function -- just renamed to reflect the fact that you can
-  change the whole URL now, not just the hash.
-
 * `location2messages` will be called when a change in the browser's URL is
   detected, either because the user followed a link, typed something in the
   location bar, or used the back or forward buttons.
@@ -129,10 +125,6 @@ So, the "special" fields are the `delta2url` function and the
   Your function should return a list of messages that your `update` function
   can respond to. Those messages will be fed into your app, to produce the
   changes to the model that the new URL implies.
-
-  If you are familiar with elm-route-hash, `location2messages` is analogous to
-  the old `location2actions` function -- just renamed to reflected the
-  terminology change from `action` to `msg` in Elm 0.17.
 -}
 type alias App model msg =
     { delta2url : model -> model -> Maybe UrlChange
