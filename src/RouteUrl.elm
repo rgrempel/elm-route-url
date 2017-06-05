@@ -33,8 +33,8 @@ the state of your app to be partially bookmark-able.
 It is, of course, possible to do something like this using
 [`elm-lang/navigation`](http://package.elm-lang.org/packages/elm-lang/navigation/latest)
 by itself. For a discussion of the
-differences between the official module and this one, see the [package documentation]
-(http://package.elm-lang.org/packages/rgrempel/elm-route-url/latest).
+differences between the official module and this one, see the
+[package documentation](http://package.elm-lang.org/packages/rgrempel/elm-route-url/latest).
 
 # Configuration
 
