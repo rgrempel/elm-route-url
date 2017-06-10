@@ -1,6 +1,6 @@
 {
-    "version": "3.0.0",
-    "summary": "elm-route-hash example, based on the Elm Architecture Tutorial",
+    "version": "3.0.1",
+    "summary": "elm-route-url example, based on the Elm Architecture Tutorial",
     "repository": "https://github.com/rgrempel/elm-route-url.git",
     "license": "BSD3",
     "source-directories": [
@@ -9,7 +9,7 @@
     ],
     "exposed-modules": [],
     "dependencies": {
-        "ccapndave/elm-update-extra": "2.3.1 <= v < 3.0.0",
+        "ccapndave/elm-update-extra": "2.3.1 <= v < 4.0.0",
         "elm-community/easing-functions": "1.0.2 <= v < 2.0.0",
         "elm-community/result-extra": "2.0.1 <= v < 3.0.0",
         "elm-lang/animation-frame": "1.0.1 <= v < 2.0.0",
