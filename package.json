@@ -1,0 +1,26 @@
+{
+  "name": "elm-route-url",
+  "version": "3.0.1",
+  "description": "Router for single-page-apps in Elm",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "elm": "^0.18.0"
+  },
+  "scripts": {
+    "test": "cd examples/elm-architecture-tutorial && sh compile.sh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rgrempel/elm-route-url.git"
+  },
+  "author": "Ryan Rempel <rgrempel@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rgrempel/elm-route-url/issues"
+  },
+  "homepage": "https://github.com/rgrempel/elm-route-url#readme"
+}

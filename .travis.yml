@@ -1,0 +1,27 @@
+language: node_js
+
+node_js: 5
+
+env:
+ - PATH=$TRAVIS_BUILD_DIR/node_modules/.bin:$TRAVIS_BUILD_DIR/sysconfcpus/bin:$PATH
+
+cache:
+  directories:
+    - sysconfcpus
+
+before_install:
+  - |
+    if [ ! -d sysconfcpus/bin ];
+    then
+      git clone https://github.com/obmarg/libsysconfcpus.git;
+      cd libsysconfcpus;
+      ./configure --prefix=$TRAVIS_BUILD_DIR/sysconfcpus;
+      make && make install;
+      cd ..;
+    fi
+
+install:
+  - npm install
+
+script:
+  - sysconfcpus -n 2 npm test
