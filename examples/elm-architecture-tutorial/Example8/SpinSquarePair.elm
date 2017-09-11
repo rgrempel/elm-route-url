@@ -176,16 +176,10 @@ builder2messages builder =
     let
         left =
             getQuery "left" builder
+                |> List.filterMap (Maybe.map Left << SpinSquare.location2action)
 
         right =
             getQuery "right" builder
+                |> List.filterMap (Maybe.map Right << SpinSquare.location2action)
     in
-        case ( left, right ) of
-            ( Just l, Just r ) ->
-                List.filterMap identity
-                    [ Maybe.map Left <| SpinSquare.location2action l
-                    , Maybe.map Right <| SpinSquare.location2action r
-                    ]
-
-            _ ->
-                []
+        List.append left right

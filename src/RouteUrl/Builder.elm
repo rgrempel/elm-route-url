@@ -13,7 +13,7 @@ module RouteUrl.Builder
         , query
         , modifyQuery
         , insertQuery
-        , updateQuery
+        , addQuery
         , removeQuery
         , getQuery
         , replaceQuery
@@ -68,7 +68,7 @@ will be done for you.
 
 # Manipulating the query
 
-@docs query, modifyQuery, insertQuery, updateQuery, removeQuery, getQuery, replaceQuery
+@docs query, modifyQuery, insertQuery, addQuery, removeQuery, getQuery, replaceQuery
 
 
 # Manipulating the hash
@@ -104,7 +104,7 @@ type Builder
     = Builder
         { entry : HistoryEntry
         , path : List String
-        , query : Dict String String
+        , query : List ( String, String )
         , hash : String
         }
 
@@ -124,7 +124,7 @@ builder =
     Builder
         { entry = NewEntry
         , path = []
-        , query = Dict.empty
+        , query = []
         , hash = ""
         }
 
@@ -200,53 +200,98 @@ replacePath list (Builder builder) =
 -- QUERY
 
 
-{-| The query portion of the URL. It is represented by a `Dict` of
+{-| The query portion of the URL. It is represented by a `List` of
 key/value pairs.
 -}
-query : Builder -> Dict String String
+query : Builder -> List ( String, String )
 query (Builder builder) =
     builder.query
 
 
 {-| Replace the query with the result of a function that acts on the current query.
 -}
-modifyQuery : (Dict String String -> Dict String String) -> Builder -> Builder
+modifyQuery : (List ( String, String ) -> List ( String, String )) -> Builder -> Builder
 modifyQuery func (Builder builder) =
     Builder { builder | query = func builder.query }
 
 
-{-| Insert a key/value pair into the query. Replaces a key with the same name,
+{-| Insert a key/value pair into the query. Replaces keys with the same name,
 in case of collision.
 -}
 insertQuery : String -> String -> Builder -> Builder
-insertQuery key value =
-    modifyQuery (Dict.insert key value)
+insertQuery newKey newValue =
+    modifyQuery
+        (\query ->
+            query
+                |> List.foldl
+                    (\( oldKey, oldValue ) ( acc, replaced ) ->
+                        if newKey == oldKey then
+                            -- If it's the key we're replacing, then see if
+                            -- we've already done it.
+                            if replaced then
+                                -- If so, we just drop the old one ... the new
+                                -- one has already been inserted
+                                ( acc, replaced )
+                            else
+                                -- If not, we insert the new one instead of the
+                                -- old one, and remember that we've done it.
+                                ( ( newKey, newValue ) :: acc
+                                , True
+                                )
+                        else
+                            -- If it's some other key, just pass it through
+                            ( ( oldKey, oldValue ) :: acc
+                            , replaced
+                            )
+                    )
+                    ( [], False )
+                |> \( reversedList, replaced ) ->
+                    -- Since we did a `foldl`, and then a bunch of `::`, the list
+                    -- was reversed. So, check whether we still need to add our
+                    -- new key, and then un-reverse. (This helps us put the new
+                    -- key at the end, if it didn't exist before).
+                    if replaced then
+                        List.reverse reversedList
+                    else
+                        List.reverse <|
+                            ( newKey, newValue )
+                                :: reversedList
+        )
 
 
-{-| Update a particular query key using the given function.
+{-| Add a key/value pair into the query. Does not replace a key with the same name ...
+just adds another value.
 -}
-updateQuery : String -> (Maybe String -> Maybe String) -> Builder -> Builder
-updateQuery key func =
-    modifyQuery (Dict.update key func)
+addQuery : String -> String -> Builder -> Builder
+addQuery key value =
+    modifyQuery (\query -> List.reverse (( key, value ) :: List.reverse query))
 
 
 {-| Remove a query key.
 -}
 removeQuery : String -> Builder -> Builder
-removeQuery =
-    modifyQuery << Dict.remove
+removeQuery key =
+    modifyQuery (List.filter (\( k, _ ) -> k /= key))
 
 
-{-| Get the value for a query key.
+{-| Get the values for a query key (can return multiple values if the key
+is given more than once in the query).
 -}
-getQuery : String -> Builder -> Maybe String
+getQuery : String -> Builder -> List String
 getQuery key (Builder builder) =
-    Dict.get key builder.query
+    builder.query
+        |> List.filterMap
+            (\( k, v ) ->
+                if k == key then
+                    Just v
+                else
+                    Nothing
+            )
 
 
-{-| Replace the whole query with a different dictionary.
+{-| Replace the whole query with a different list of key/value pairs.
 -}
-replaceQuery : Dict String String -> Builder -> Builder
+replaceQuery : List ( String, String ) -> Builder -> Builder
 replaceQuery query (Builder builder) =
     Builder { builder | query = query }
 
@@ -299,13 +344,13 @@ toChange stuffIntoHash (Builder builder) =
             String.join "/" (List.map encodeUri builder.path)
 
         joinedQuery =
-            if Dict.isEmpty builder.query then
+            if List.isEmpty builder.query then
                 ""
             else
-                queryPrefix ++ String.join "&" (Dict.foldl eachQuery [] builder.query)
+                queryPrefix ++ String.join "&" (List.map eachQuery builder.query)
 
-        eachQuery key value memo =
-            (encodeUri key ++ "=" ++ encodeUri value) :: memo
+        eachQuery ( key, value ) =
+            encodeUri key ++ "=" ++ encodeUri value
 
         hashPrefix =
             if stuffIntoHash then

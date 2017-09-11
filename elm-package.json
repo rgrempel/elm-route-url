@@ -17,7 +17,7 @@
         "elm-lang/html": "2.0.0 <= v < 3.0.0",
         "elm-lang/http": "1.0.0 <= v < 2.0.0",
         "elm-lang/navigation": "2.0.0 <= v < 3.0.0",
-        "sporto/erl": "10.0.2 <= v < 11.0.0"
+        "sporto/erl": "11.0.0 <= v < 14.0.0"
     },
     "elm-version": "0.18.0 <= v < 0.19.0"
 }
