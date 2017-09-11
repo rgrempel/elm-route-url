@@ -8,10 +8,11 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "elm": "^0.18.0"
+    "elm": "^0.18.0",
+    "elm-test": "^0.18.9"
   },
   "scripts": {
-    "test": "cd examples/elm-architecture-tutorial && sh compile.sh"
+    "test": "sh ./run-tests.sh"
   },
   "repository": {
     "type": "git",

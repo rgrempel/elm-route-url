@@ -347,10 +347,10 @@ toChange stuffIntoHash (Builder builder) =
             if List.isEmpty builder.query then
                 ""
             else
-                queryPrefix ++ String.join "&" (List.foldl eachQuery [] builder.query)
+                queryPrefix ++ String.join "&" (List.map eachQuery builder.query)
 
-        eachQuery ( key, value ) memo =
-            (encodeUri key ++ "=" ++ encodeUri value) :: memo
+        eachQuery ( key, value ) =
+            encodeUri key ++ "=" ++ encodeUri value
 
         hashPrefix =
             if stuffIntoHash then
