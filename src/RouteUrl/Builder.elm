@@ -84,7 +84,6 @@ will be done for you.
 
 import RouteUrl exposing (HistoryEntry(..), UrlChange)
 import Dict exposing (Dict)
-import Erl.Query
 import Http exposing (encodeUri, decodeUri)
 import Regex exposing (HowMany(..), replace, regex)
 import String
@@ -216,27 +215,63 @@ modifyQuery func (Builder builder) =
     Builder { builder | query = func builder.query }
 
 
-{-| Insert a key/value pair into the query. Replaces a key with the same name,
+{-| Insert a key/value pair into the query. Replaces keys with the same name,
 in case of collision.
 -}
 insertQuery : String -> String -> Builder -> Builder
-insertQuery key =
-    modifyQuery << Erl.Query.set key
+insertQuery newKey newValue =
+    modifyQuery
+        (\query ->
+            query
+                |> List.foldl
+                    (\( oldKey, oldValue ) ( acc, replaced ) ->
+                        if newKey == oldKey then
+                            -- If it's the key we're replacing, then see if
+                            -- we've already done it.
+                            if replaced then
+                                -- If so, we just drop the old one ... the new
+                                -- one has already been inserted
+                                ( acc, replaced )
+                            else
+                                -- If not, we insert the new one instead of the
+                                -- old one, and remember that we've done it.
+                                ( ( newKey, newValue ) :: acc
+                                , True
+                                )
+                        else
+                            -- If it's some other key, just pass it through
+                            ( ( oldKey, oldValue ) :: acc
+                            , replaced
+                            )
+                    )
+                    ( [], False )
+                |> \( reversedList, replaced ) ->
+                    -- Since we did a `foldl`, and then a bunch of `::`, the list
+                    -- was reversed. So, check whether we still need to add our
+                    -- new key, and then un-reverse. (This helps us put the new
+                    -- key at the end, if it didn't exist before).
+                    if replaced then
+                        List.reverse reversedList
+                    else
+                        List.reverse <|
+                            ( newKey, newValue )
+                                :: reversedList
+        )
 
 
 {-| Add a key/value pair into the query. Does not replace a key with the same name ...
-just adds a second value.
+just adds another value.
 -}
 addQuery : String -> String -> Builder -> Builder
-addQuery key =
-    modifyQuery << Erl.Query.add key
+addQuery key value =
+    modifyQuery (\query -> List.reverse (( key, value ) :: List.reverse query))
 
 
 {-| Remove a query key.
 -}
 removeQuery : String -> Builder -> Builder
-removeQuery =
-    modifyQuery << Erl.Query.remove
+removeQuery key =
+    modifyQuery (List.filter (\( k, _ ) -> k /= key))
 
 
 {-| Get the values for a query key (can return multiple values if the key
@@ -244,7 +279,14 @@ is given more than once in the query).
 -}
 getQuery : String -> Builder -> List String
 getQuery key (Builder builder) =
-    Erl.Query.getValuesForKey key builder.query
+    builder.query
+        |> List.filterMap
+            (\( k, v ) ->
+                if k == key then
+                    Just v
+                else
+                    Nothing
+            )
 
 
 {-| Replace the whole query with a different list of key/value pairs.

@@ -82,7 +82,6 @@ need them.
 
 import Dict
 import Erl exposing (Url)
-import Erl.Query
 import Html exposing (Html)
 import Navigation exposing (Location)
 import String exposing (startsWith)
@@ -585,10 +584,11 @@ the things we care about).
 -}
 eqUrl : Url -> Url -> Bool
 eqUrl u1 u2 =
+    -- The queries are `List (String, String)`, so `==` should be OK
     (u1.path == u2.path)
         && (u1.hasTrailingSlash == u2.hasTrailingSlash)
         && (u1.hash == u2.hash)
-        && (Erl.Query.toString u1.query == Erl.Query.toString u2.query)
+        && (u1.query == u2.query)
 
 
 checkDistinctUrl : Url -> UrlChange -> Maybe UrlChange
