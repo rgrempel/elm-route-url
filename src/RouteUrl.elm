@@ -82,6 +82,7 @@ need them.
 
 import Dict
 import Erl exposing (Url)
+import Erl.Query
 import Html exposing (Html)
 import Navigation exposing (Location)
 import String exposing (startsWith)
@@ -587,7 +588,7 @@ eqUrl u1 u2 =
     (u1.path == u2.path)
         && (u1.hasTrailingSlash == u2.hasTrailingSlash)
         && (u1.hash == u2.hash)
-        && (Dict.toList u1.query == Dict.toList u2.query)
+        && (Erl.Query.toString u1.query == Erl.Query.toString u2.query)
 
 
 checkDistinctUrl : Url -> UrlChange -> Maybe UrlChange

@@ -130,12 +130,12 @@ builder2messages builder =
     let
         left =
             getQuery "top" builder
-                |> Maybe.map ((List.map Top) << Counter.fragment2messages)
+                |> List.concatMap Counter.fragment2messages
+                |> List.map Top
 
         right =
             getQuery "bottom" builder
-                |> Maybe.map ((List.map Bottom) << Counter.fragment2messages)
+                |> List.concatMap Counter.fragment2messages
+                |> List.map Bottom
     in
-        [ left, right ]
-            |> List.filterMap identity
-            |> List.concat
+        List.append left right

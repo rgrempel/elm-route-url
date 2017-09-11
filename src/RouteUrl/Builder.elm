@@ -13,7 +13,7 @@ module RouteUrl.Builder
         , query
         , modifyQuery
         , insertQuery
-        , updateQuery
+        , addQuery
         , removeQuery
         , getQuery
         , replaceQuery
@@ -68,7 +68,7 @@ will be done for you.
 
 # Manipulating the query
 
-@docs query, modifyQuery, insertQuery, updateQuery, removeQuery, getQuery, replaceQuery
+@docs query, modifyQuery, insertQuery, addQuery, removeQuery, getQuery, replaceQuery
 
 
 # Manipulating the hash
@@ -84,6 +84,7 @@ will be done for you.
 
 import RouteUrl exposing (HistoryEntry(..), UrlChange)
 import Dict exposing (Dict)
+import Erl.Query
 import Http exposing (encodeUri, decodeUri)
 import Regex exposing (HowMany(..), replace, regex)
 import String
@@ -104,7 +105,7 @@ type Builder
     = Builder
         { entry : HistoryEntry
         , path : List String
-        , query : Dict String String
+        , query : List ( String, String )
         , hash : String
         }
 
@@ -124,7 +125,7 @@ builder =
     Builder
         { entry = NewEntry
         , path = []
-        , query = Dict.empty
+        , query = []
         , hash = ""
         }
 
@@ -200,17 +201,17 @@ replacePath list (Builder builder) =
 -- QUERY
 
 
-{-| The query portion of the URL. It is represented by a `Dict` of
+{-| The query portion of the URL. It is represented by a `List` of
 key/value pairs.
 -}
-query : Builder -> Dict String String
+query : Builder -> List ( String, String )
 query (Builder builder) =
     builder.query
 
 
 {-| Replace the query with the result of a function that acts on the current query.
 -}
-modifyQuery : (Dict String String -> Dict String String) -> Builder -> Builder
+modifyQuery : (List ( String, String ) -> List ( String, String )) -> Builder -> Builder
 modifyQuery func (Builder builder) =
     Builder { builder | query = func builder.query }
 
@@ -219,34 +220,36 @@ modifyQuery func (Builder builder) =
 in case of collision.
 -}
 insertQuery : String -> String -> Builder -> Builder
-insertQuery key value =
-    modifyQuery (Dict.insert key value)
+insertQuery key =
+    modifyQuery << Erl.Query.set key
 
 
-{-| Update a particular query key using the given function.
+{-| Add a key/value pair into the query. Does not replace a key with the same name ...
+just adds a second value.
 -}
-updateQuery : String -> (Maybe String -> Maybe String) -> Builder -> Builder
-updateQuery key func =
-    modifyQuery (Dict.update key func)
+addQuery : String -> String -> Builder -> Builder
+addQuery key =
+    modifyQuery << Erl.Query.add key
 
 
 {-| Remove a query key.
 -}
 removeQuery : String -> Builder -> Builder
 removeQuery =
-    modifyQuery << Dict.remove
+    modifyQuery << Erl.Query.remove
 
 
-{-| Get the value for a query key.
+{-| Get the values for a query key (can return multiple values if the key
+is given more than once in the query).
 -}
-getQuery : String -> Builder -> Maybe String
+getQuery : String -> Builder -> List String
 getQuery key (Builder builder) =
-    Dict.get key builder.query
+    Erl.Query.getValuesForKey key builder.query
 
 
-{-| Replace the whole query with a different dictionary.
+{-| Replace the whole query with a different list of key/value pairs.
 -}
-replaceQuery : Dict String String -> Builder -> Builder
+replaceQuery : List ( String, String ) -> Builder -> Builder
 replaceQuery query (Builder builder) =
     Builder { builder | query = query }
 
@@ -299,12 +302,12 @@ toChange stuffIntoHash (Builder builder) =
             String.join "/" (List.map encodeUri builder.path)
 
         joinedQuery =
-            if Dict.isEmpty builder.query then
+            if List.isEmpty builder.query then
                 ""
             else
-                queryPrefix ++ String.join "&" (Dict.foldl eachQuery [] builder.query)
+                queryPrefix ++ String.join "&" (List.foldl eachQuery [] builder.query)
 
-        eachQuery key value memo =
+        eachQuery ( key, value ) memo =
             (encodeUri key ++ "=" ++ encodeUri value) :: memo
 
         hashPrefix =
