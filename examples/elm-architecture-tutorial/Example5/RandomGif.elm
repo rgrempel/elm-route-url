@@ -35,6 +35,7 @@ type RequestStatus
 
 We start the requestStatus as Use so that we will use the response to the
 initial request we issue here.
+
 -}
 init : ( Model, Cmd Action )
 init =

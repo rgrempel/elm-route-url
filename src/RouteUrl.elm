@@ -23,7 +23,7 @@ module RouteUrl
         )
 
 {-| This module provides routing for single-page apps based on changes to the
- the browser's location. The routing happens in both directions
+the browser's location. The routing happens in both directions
 -- that is, changes to the browser's location are translated to messages
 your app can respond to, and changes to your app's state are translated to
 changes in the browser's location. The net effect is to make it possible for
@@ -36,6 +36,7 @@ by itself. For a discussion of the
 differences between the official module and this one, see the
 [package documentation](http://package.elm-lang.org/packages/rgrempel/elm-route-url/latest).
 
+
 # Configuration
 
 You configure this module by providing the functions set out in [`App`](#App) or
@@ -44,6 +45,7 @@ want to use.
 
 @docs App, AppWithFlags
 
+
 # URL Changes
 
 You use `UrlChange` and `HistoryEntry` to indicate changes to the URL to be
@@ -51,17 +53,19 @@ displayed in the browser's location bar.
 
 @docs UrlChange, HistoryEntry
 
+
 # Initialization (the simple version)
 
 The simplest way to use this module is to do something like this:
 
-* Define your [`App`](#App) or [`AppWithFlags`](#AppWithFlags) record.
+  - Define your [`App`](#App) or [`AppWithFlags`](#AppWithFlags) record.
 
-* Use [`program`](#program) or [`programWithFlags`](#programWithFlags) to
-  create your `main` function, instead of their homonymous equivalents in
-  [`Html`](http://package.elm-lang.org/packages/elm-lang/html/2.0.0/Html).
+  - Use [`program`](#program) or [`programWithFlags`](#programWithFlags) to
+    create your `main` function, instead of their homonymous equivalents in
+    [`Html`](http://package.elm-lang.org/packages/elm-lang/html/2.0.0/Html).
 
 @docs program, programWithFlags, RouteUrlProgram
+
 
 # More complex initialization
 
@@ -73,6 +77,7 @@ need them.
 @docs NavigationAppWithFlags, navigationAppWithFlags, runNavigationAppWithFlags
 @docs WrappedModel, unwrapModel, mapModel
 @docs WrappedMsg, unwrapMsg, wrapUserMsg, wrapLocation
+
 -}
 
 import Dict
@@ -95,36 +100,37 @@ as they do in [`Html.program`](http://package.elm-lang.org/packages/elm-lang/htm
 So, the "special" fields are the `delta2url` function and the
 `location2messages` function.
 
-* `delta2url` will be called when your model changes. The first parameter is
-  the model's previous value, and the second is the model's new value.
+  - `delta2url` will be called when your model changes. The first parameter is
+    the model's previous value, and the second is the model's new value.
 
-  Your function should return a `Just UrlChange` if a new URL should be
-  displayed in the browser's location bar (or `Nothing` if no change to the URL
-  is needed). This library will check the current URL before setting a new one,
-  so you need not worry about setting duplicate URLs -- that will be
-  automatically avoided.
+    Your function should return a `Just UrlChange` if a new URL should be
+    displayed in the browser's location bar (or `Nothing` if no change to the URL
+    is needed). This library will check the current URL before setting a new one,
+    so you need not worry about setting duplicate URLs -- that will be
+    automatically avoided.
 
-  The reason we provide both the previous and current model for your
-  consideration is that sometimes you may want to do something differently
-  depending on the nature of the change in the model, not just the new value.
-  For instance, it might make the difference between using `NewEntry` or
-  `ModifyEntry` to make the change.
+    The reason we provide both the previous and current model for your
+    consideration is that sometimes you may want to do something differently
+    depending on the nature of the change in the model, not just the new value.
+    For instance, it might make the difference between using `NewEntry` or
+    `ModifyEntry` to make the change.
 
-  Note that this function will *not* be called when processing messages
-  returned from your `location2messages` function, since in that case the
-  URL has already been set.
+    Note that this function will *not* be called when processing messages
+    returned from your `location2messages` function, since in that case the
+    URL has already been set.
 
-* `location2messages` will be called when a change in the browser's URL is
-  detected, either because the user followed a link, typed something in the
-  location bar, or used the back or forward buttons.
+  - `location2messages` will be called when a change in the browser's URL is
+    detected, either because the user followed a link, typed something in the
+    location bar, or used the back or forward buttons.
 
-  Note that this function will *not* be called when your `delta2url` method
-  initiates a `UrlChange` -- since in that case, the relevant change in the
-  model has already occurred.
+    Note that this function will *not* be called when your `delta2url` method
+    initiates a `UrlChange` -- since in that case, the relevant change in the
+    model has already occurred.
 
-  Your function should return a list of messages that your `update` function
-  can respond to. Those messages will be fed into your app, to produce the
-  changes to the model that the new URL implies.
+    Your function should return a list of messages that your `update` function
+    can respond to. Those messages will be fed into your app, to produce the
+    changes to the model that the new URL implies.
+
 -}
 type alias App model msg =
     { delta2url : model -> model -> Maybe UrlChange
@@ -145,6 +151,7 @@ as they do in
 
 So, the special functions are `delta2url` and `location2messages`,
 which are described above, under [`App`](#App).
+
 -}
 type alias AppWithFlags model msg flags =
     { delta2url : model -> model -> Maybe UrlChange
@@ -208,27 +215,27 @@ there may be several ways you might want to build up the required URL. We
 don't want to be prescriptive about that. However, the `String` you provide
 must follow a couple of rules.
 
-* The `String` must already be uri-encoded.
+  - The `String` must already be uri-encoded.
 
-* The `String` must either start with a '/', a `?' or a '#'.
+  - The `String` must either start with a '/', a `?' or a '#'.
+      - If it starts with a '/', it will be interpreted as a full path, including
+        optional query parameters and hash.
 
-    * If it starts with a '/', it will be interpreted as a full path, including
-      optional query parameters and hash.
+      - If it starts with a '?', then we'll assume that you want the current
+        path to stay the same -- only the query parameters and hash will change.
 
-    * If it starts with a '?', then we'll assume that you want the current
-      path to stay the same -- only the query parameters and hash will change.
-
-    * If it starts with a '#', then we'll assume that you want the current
-      path and query parameters (if any) to stay the same -- only the
-      hash will change.
+      - If it starts with a '#', then we'll assume that you want the current
+        path and query parameters (if any) to stay the same -- only the
+        hash will change.
 
 So, what you should *not* provide is the scheme, host, or authentication
-method -- that is, no "http://elm-lang.org". You should also not use relative
+method -- that is, no "<http://elm-lang.org">. You should also not use relative
 URLs. (Let me know if you'd like relative URLs -- we might be able to do
 something sensible with them, but we don't yet in this version).
 
 One way to construct a `UrlChange` in a modular way is to use the
 `RouteUrl.Builder` module. However, a variety of approaches are possible.
+
 -}
 type alias UrlChange =
     { entry : HistoryEntry
@@ -241,6 +248,7 @@ modify the current entry.
 
 One could have used a `Bool` for this instead, but I hate remembering what
 `True` actually means.
+
 -}
 type HistoryEntry
     = NewEntry
@@ -255,6 +263,7 @@ type HistoryEntry
 sent to change the URL. We increment it when we send a command, and
 decrement it when we get one from `Navigation` (unless it's already zero,
 of course).
+
 -}
 type alias RouterModel =
     { reportedUrl : Url
@@ -318,6 +327,7 @@ wrapUserMsg =
 {-| Given a location, make the kind of message that `RouteUrl` uses.
 
 I'm not sure you'll ever need this ... perhaps for testing?
+
 -}
 wrapLocation : Location -> WrappedMsg user
 wrapLocation =
@@ -337,6 +347,7 @@ this to [`runNavigationApp`](#runNavigationApp) in order to create a `Program`.
 Normally you don't need this -- you can just use [`program`](#program).
 However, `NavigationApp` could be useful if you want to do any further wrapping
 of its functions.
+
 -}
 type alias NavigationApp model msg =
     { locationToMessage : Location -> msg
@@ -356,6 +367,7 @@ this to [`runNavigationAppWithFlags`](#runNavigationAppWithFlags) in order to cr
 Normally you don't need this -- you can just use [`programWithFlags`](#programWithFlags).
 However, `NavigationAppWithFlags` could be useful if you want to do any further wrapping
 of its functions.
+
 -}
 type alias NavigationAppWithFlags model msg flags =
     { locationToMessage : Location -> msg
@@ -372,6 +384,7 @@ the functions which
 requires.
 
 Normally, you don't need this -- you can just use [`program`](#program).
+
 -}
 navigationApp : App model msg -> NavigationApp (WrappedModel model) (WrappedMsg msg)
 navigationApp app =
@@ -393,6 +406,7 @@ the functions which
 requires.
 
 Normally, you don't need this -- you can just use [`programWithFlags`](#programWithFlags).
+
 -}
 navigationAppWithFlags : AppWithFlags model msg flags -> NavigationAppWithFlags (WrappedModel model) (WrappedMsg msg) flags
 navigationAppWithFlags app =
@@ -416,6 +430,7 @@ which goes directly from the required
 configuration to a `Program`. You would only want `runNavigationApp` for the
 sake of composability -- that is, in case there is something further you want
 to do with the `NavigationApp` structure before turning it into a `Program`.
+
 -}
 runNavigationApp : NavigationApp model msg -> Program Never model msg
 runNavigationApp app =
@@ -435,6 +450,7 @@ which goes directly from the required
 configuration to a `Program`. You would only want `runNavigationApp` for the
 sake of composability -- that is, in case there is something further you want
 to do with the `NavigationApp` structure before turning it into a `Program`.
+
 -}
 runNavigationAppWithFlags : NavigationAppWithFlags model msg flags -> Program flags model msg
 runNavigationAppWithFlags app =
@@ -452,26 +468,21 @@ that `RouteUrl` supplies.
 
 For instance, suppose your `main` function would normally be typed like this:
 
-```
-main : Program Never Model Msg
-```
+    main : Program Never Model Msg
 
 Now, once you use `RouteUrl.program` to set things up, `RouteUrl` wraps your
 model and msg types, so that the signature for your `main` function would
 now be:
 
-```
-main : Program Never (WrappedModel Model) (WrappedMsg Msg)
-```
+    main : Program Never (WrappedModel Model) (WrappedMsg Msg)
 
 But that's a little ugly. So, if you like, you can use the `RouteUrlProgram`
 alias like this:
 
-```
-main : RouteUrlProgram Never Model Msg
-```
+    main : RouteUrlProgram Never Model Msg
 
 It's exactly the same type, but looks a little nicer.
+
 -}
 type alias RouteUrlProgram flags model msg =
     Program flags (WrappedModel model) (WrappedMsg msg)

@@ -31,19 +31,18 @@ module RouteUrl.Builder
 
 However, the `Builder` type is not really the focus of elm-route-url.
 
-* Ultimately, a `UrlChange` just requires a `String` -- you don't need to
-  use this module to construct one.
+  - Ultimately, a `UrlChange` just requires a `String` -- you don't need to
+    use this module to construct one.
 
-* You also don't need to use this module to parse a `Location` -- there are a
-  fair number of relevant packages for that, including:
-
-    * [evancz/url-parser](http://package.elm-lang.org/packages/evancz/url-parser/latest)
-    * [Bogdanp/elm-combine](http://package.elm-lang.org/packages/Bogdanp/elm-combine/latest)
-    * [Bogdanp/elm-route](http://package.elm-lang.org/packages/Bogdanp/elm-route/latest)
-    * [etaque/elm-route-parser](http://package.elm-lang.org/packages/etaque/elm-route-parser/latest)
-    * [poyang/elm-router](http://package.elm-lang.org/packages/poying/elm-router/latest)
-    * [sporto/erl](http://package.elm-lang.org/packages/sporto/erl/latest)
-    * [sporto/hop](http://package.elm-lang.org/packages/sporto/hop/latest)
+  - You also don't need to use this module to parse a `Location` -- there are a
+    fair number of relevant packages for that, including:
+      - [evancz/url-parser](http://package.elm-lang.org/packages/evancz/url-parser/latest)
+      - [Bogdanp/elm-combine](http://package.elm-lang.org/packages/Bogdanp/elm-combine/latest)
+      - [Bogdanp/elm-route](http://package.elm-lang.org/packages/Bogdanp/elm-route/latest)
+      - [etaque/elm-route-parser](http://package.elm-lang.org/packages/etaque/elm-route-parser/latest)
+      - [poyang/elm-router](http://package.elm-lang.org/packages/poying/elm-router/latest)
+      - [sporto/erl](http://package.elm-lang.org/packages/sporto/erl/latest)
+      - [sporto/hop](http://package.elm-lang.org/packages/sporto/hop/latest)
 
 So, this module is potentially useful, but there are quite a few other
 options you may wish to investigate.
@@ -51,25 +50,31 @@ options you may wish to investigate.
 Note that you should not uri-encode anything provided to this module. That
 will be done for you.
 
+
 # Initialization
 
 @docs Builder, builder
+
 
 # Creating or modifying history entries
 
 @docs entry, newEntry, modifyEntry
 
+
 # Manipulating the path
 
 @docs path, modifyPath, prependToPath, appendToPath, replacePath
+
 
 # Manipulating the query
 
 @docs query, modifyQuery, insertQuery, updateQuery, removeQuery, getQuery, replaceQuery
 
+
 # Manipulating the hash
 
 @docs hash, modifyHash, replaceHash
+
 
 # Conversion
 
@@ -93,6 +98,7 @@ or parse a `Location`.
 
 Start with [`builder`](#builder), and then use other functions to make changes.
 Or, if you have a URL, start with [`fromUrl`](#fromUrl) or [`fromHash`](#fromHash).
+
 -}
 type Builder
     = Builder
@@ -109,8 +115,9 @@ to build up the URL.
     url : Builder
     url =
         builder
-        |> newEntry
-        |> appendToPath ["home"]
+            |> newEntry
+            |> appendToPath [ "home" ]
+
 -}
 builder : Builder
 builder =
@@ -330,6 +337,7 @@ toUrlChange =
 If your `Builder` has a hash component, we'll use '$' instead of '#' to
 delimit the embedded hash. And, we will use '^' instead of '?' to begin
 the query parameters.
+
 -}
 toHashChange : Builder -> UrlChange
 toHashChange =
@@ -347,21 +355,21 @@ fromUrl url =
         Builder
             { entry = NewEntry
             , path = erl.path
-            , query =
-                erl.query
-                -- note that Erl.parse doesn't seem to decode the hash for you
+            , query = erl.query
+
+            -- note that Erl.parse doesn't seem to decode the hash for you
             , hash = Maybe.withDefault "" <| decodeUri erl.hash
             }
 
 
 {-| Constructs a `Builder` from the hash portion of a URL.
 
-* Assumes that the hash starts with "#!/".
+  - Assumes that the hash starts with "#!/".
 
-* Assumes that any embedded hash is delimited with a '$' instead of a '#'.
+  - Assumes that any embedded hash is delimited with a '$' instead of a '#'.
 
-* Assumes that any embedded query parameters being with a '^' instead of
-  a '?'.
+  - Assumes that any embedded query parameters being with a '^' instead of
+    a '?'.
 
 -}
 fromHash : String -> Builder

@@ -49,6 +49,7 @@ what the user is looking at now), and parts that are "transient" (which need
 to be remembered, but only while the user is looking at a particular thing).
 So, in that cae, some things would be in a record, whereas other things would
 be in a union type.
+
 -}
 type alias Model =
     { example1 : Example1.Model
@@ -58,9 +59,9 @@ type alias Model =
     , example5 : Example5.Model
     , example6 : Example6.Model
     , example7 : Example7.Model
-    , example8 :
-        Example8.Model
-        -- And, we need to track which example we're actually showing
+    , example8 : Example8.Model
+
+    -- And, we need to track which example we're actually showing
     , currentExample : Example
     }
 

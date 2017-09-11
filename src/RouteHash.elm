@@ -31,17 +31,21 @@ At your leisure, you should transition to the new `RouteUrl` API, which allows
 you to use the whole URL (rather than just the hash), since this old API will
 be removed in a future version of elm-route-url.
 
+
 # Configuration
 
 @docs Config, ConfigWithFlags, defaultPrefix
+
 
 # Helpers for `HashUpdate`
 
 @docs HashUpdate, set, replace, apply, map, extract
 
+
 # Simple Initialization
 
 @docs program, programWithFlags
+
 
 # Complicated Initialization (usually not needed)
 
@@ -100,6 +104,7 @@ The `List String` represents the hash portion of the location. Each element of
 the list will be uri-encoded, and then the list will be joined using slashes
 ("/"). Finally, a prefix will be applied (by [default](#defaultPrefix), "#!/",
 but it is configurable).
+
 -}
 set : List String -> HashUpdate
 set =
@@ -113,6 +118,7 @@ The `List String` represents the hash portion of the location. Each element of
 the list will be uri-encoded, and then the list will be joined using slashes
 ("/"). Finally, a prefix will be applied (by [default](#defaultPrefix), "#!/",
 but it is configurable).
+
 -}
 replace : List String -> HashUpdate
 replace =
@@ -148,6 +154,7 @@ For instance, your [`delta2update`](#Config) function might look something like 
 Of course, your model and modules may be set up differently. However you do it,
 the `map` function allows you to dispatch `delta2update` to a lower-level module,
 and then modify the `Maybe HashUpdate` which it returns.
+
 -}
 map : (List String -> List String) -> Maybe HashUpdate -> Maybe HashUpdate
 map =
@@ -168,12 +175,12 @@ extract action =
 
 {-| Represents the configuration necessary to use this module.
 
-*  `prefix` is the initial characters that should be stripped from the hash (if
+  - `prefix` is the initial characters that should be stripped from the hash (if
     present) when reacting to location changes, and added to the hash when
     generating location changes. Normally, you'll likely want to use
     [`defaultPrefix`](#defaultPrefix), which is "#!/".
 
-*   `delta2update` is a function which takes two arguments and possibly
+  - `delta2update` is a function which takes two arguments and possibly
     returns a [`HashUpdate`](#HashUpdate). The first argument is the previous
     model. The second argument is the current model.
 
@@ -187,9 +194,9 @@ extract action =
     This module will normalize the `List String` in the update in the following
     way before setting the actual location. It will:
 
-    * uri-encode the strings
-    * join them with "/"
-    * add the `prefix` to the beginning
+      - uri-encode the strings
+      - join them with "/"
+      - add the `prefix` to the beginning
 
     In a modular application, you may well want to use [`map`](#map) after dispatching
     to a lower level -- see the example in the [`map` documentation](#map).
@@ -202,7 +209,7 @@ extract action =
     The content of the individual strings is up to you ... essentially it
     should be something that your `location2action` function can deal with.
 
-*   `location2action` is a function which takes a `List String` and returns
+  - `location2action` is a function which takes a `List String` and returns
     a list of actions your app can perform.
 
     The argument is a normalized version of the hash portion of the location.
@@ -223,10 +230,11 @@ extract action =
     modular in a way that requires multiple actions to produce the desired
     state.
 
-*   The remaining functions (`init`, `update`, `subscriptions` and `view`)
+  - The remaining functions (`init`, `update`, `subscriptions` and `view`)
     have the same meaning as they do in
     [`Html.program`](http://package.elm-lang.org/packages/elm-lang/html/2.0.0/Html#program)
     ... that is, you should provide what you normally provide to that function.
+
 -}
 type alias Config model msg =
     { prefix : String
@@ -276,6 +284,7 @@ delta2urlWithFlags config old new =
 
 Usually you won't need this -- you can just use [`programWithFlags`](#programWithFlags) to
 go directly to a `Program` instead.
+
 -}
 appWithFlags : ConfigWithFlags model msg flags -> AppWithFlags model msg flags
 appWithFlags config =
@@ -304,6 +313,7 @@ delta2url config old new =
 
 Usually you won't need this -- you can just use [`program`](#program) to
 go directly to a `Program` instead.
+
 -}
 app : Config model msg -> App model msg
 app config =
@@ -350,6 +360,7 @@ removeInitial initial original =
 {-| Remove initial characters from the string, as many as there are.
 
 So, for "#!/", remove # if is first, then ! if it is next, etc.
+
 -}
 removeInitialSequence : String -> String -> String
 removeInitialSequence initial original =
