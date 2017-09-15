@@ -39,7 +39,7 @@ initial request we issue here.
 -}
 init : ( Model, Cmd Action )
 init =
-    ( Model "funny cats" "assets/waiting.gif" Use
+    ( Model "funny cats" "/assets/waiting.gif" Use
     , getRandomGif "funny cats"
     )
 
