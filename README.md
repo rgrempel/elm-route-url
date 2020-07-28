@@ -1,7 +1,7 @@
 # elm-route-url
 
 This is a module for routing single-page-apps in Elm, building on the
-[`elm-lang/navigation`](http://package.elm-lang.org/packages/elm-lang/navigation/latest)
+[`elm/browser`](https://package.elm-lang.org/packages/elm/browser/latest)
 package.
 
 ## Rationale
@@ -18,30 +18,18 @@ So, there are two things going on here:
 * Mapping changes in the browser's location to changes in our app's state.
 
 Now, you can already arrange for these things to happen using
-[`elm-lang/navigation`](http://package.elm-lang.org/packages/elm-lang/navigation/latest).
-Furthermore, there are already a wealth of complementary packages,
-such as:
-
-* [evancz/url-parser](http://package.elm-lang.org/packages/evancz/url-parser/latest)
-* [Bogdanp/elm-combine](http://package.elm-lang.org/packages/Bogdanp/elm-combine/latest)
-* [Bogdanp/elm-route](http://package.elm-lang.org/packages/Bogdanp/elm-route/latest)
-* [etaque/elm-route-parser](http://package.elm-lang.org/packages/etaque/elm-route-parser/latest)
-* [poyang/elm-router](http://package.elm-lang.org/packages/poying/elm-router/latest)
-* [pzingg/elm-navigation-extra](http://package.elm-lang.org/packages/pzingg/elm-navigation-extra/latest)
-* [sporto/erl](http://package.elm-lang.org/packages/sporto/erl/latest)
-* [sporto/hop](http://package.elm-lang.org/packages/sporto/hop/latest)
-
+[`elm/browser`](http://package.elm-lang.org/packages/elm/browser/latest).
 So, what does elm-route-url do differently than the others? First, I'll
 address this practically, then philosophically.
 
 
 ### Mapping changes in the app state to a possible location change
 
-If you were using [`elm-lang/navigation`](http://package.elm-lang.org/packages/elm-lang/navigation/latest)
+If you were using [`elm/browser`](https://package.elm-lang.org/packages/elm/browser/latest)
 directly, then you would make changes to the URL with ordinary commands.
 So, as you write your `update` function, you would possibly return a command,
-using [`modifyUrl`](http://package.elm-lang.org/packages/elm-lang/navigation/1.0.0/Navigation#modifyUrl)
-or [`newUrl`](http://package.elm-lang.org/packages/elm-lang/navigation/1.0.0/Navigation#newUrl).
+using [`replaceUrl`](https://package.elm-lang.org/packages/elm/browser/latest/Browser-Navigation#replaceUrl)
+or [`pushUrl`](https://package.elm-lang.org/packages/elm/browser/latest/Browser-Navigation#pushUrl).
 
 Now, you can make this work, of course. However, the `update` function isn't
 really the perfect place to do this. Your update function looks like this:
@@ -89,11 +77,13 @@ use elm-route-url, you don't have to.
 
 ### Mapping location changes to messages our app can respond to
 
-If you use the official [navigation](http://package.elm-lang.org/packages/elm-lang/navigation/latest)
-package in Elm 0.18 directly, you react to location changes by providing
-an argument to `Navigation.program` which converts a `Location` to a message
-your app can deal with. Those messages are then fed into your `update` function
-as the `Location` changes.
+If you use the official [browser](https://package.elm-lang.org/packages/elm/browser/latest/)
+package in Elm 0.19 directly, you react to location changes by providing
+two arguments to `Browser.application`: `onUrlRequest`, which converts a
+`UrlRequest` to a message your app can use to decide whether to permit the
+requested URL change; and `onUrlChange`, which converts a new `Url` to a
+message your app can deal with. Those messages are then fed into your
+`update` function as the `Url` changes.
 
 On the surface, elm-route-url works in a similar manner, except that it
 asks you to implement a function which returns a list of messages.
@@ -108,8 +98,8 @@ location2messages : Location -> List Message
 `location2messages` will also be called when your `init` function is invoked,
 so you will also get access to the very first `Location`.
 
-So, that is similar to how `Navigation` works. The difference is that
-`Navigation` will send you a message even when you programmatically change
+So, that is similar to how `Browser` works. The difference is that
+`Browser` will send you a message even when you programmatically change
 the URL. By contrast, elm-route-url only sends you messsages for **external**
 changes to the URL -- for instance, the user clicking on a link, opening
 a bookmark, or typing in the address bar. You won't get a message when you've
@@ -133,40 +123,21 @@ by Amitai Burstein, under the heading
 
 ## API
 
-For the detailed API, see the documentation for `RouteUrl` and `RouteHash`
-(there are links to the right, if you're looking at the Elm package site).
-
-The `RouteUrl` module is now the "primary" module. It gives you access to the
-whole `Location` object, and allows you to use the path, query and/or hash, as
-you wish.
+For the detailed API, see the documentation for `RouteUrl` (there's a link to
+the right, if you're looking at the Elm package site).
 
 The main thing that elm-route-url handles is making sure that your
 `location2messages` and `delta2url` functions are called at the appropriate
-moment. How you parse the `Location` (and construct a `UrlChange`) is pretty
-much up to you. Now, I have included a `RouteUrl.Builder` module that could
-help with those tasks. However, you don't need to use it -- many other
-approaches would be possible, and there are links to helpful packages above.
-For my own part, I've been using [evancz/url-parser](http://package.elm-lang.org/packages/evancz/url-parser/latest)
-recently to implement `location2messages`.
-
-The `RouteHash` module attempts to match the old API of elm-route-hash as
-closely as possible. You should be able to re-use your old `delta2update` and
-`location2action` functions without any changes. What will need to change is
-the code in your `main` module that initializes your app. The `RouteHash`
-module will probably be removed in a future version of elm-route-url, so you
-should migrate to using `RouteUrl` at an appropriate moment.
+moment. How you parse the `Url` (and construct a `UrlChange`) is pretty
+much up to you. You can use [`elm/url`](https://package.elm-lang.org/packages/elm/url/latest/)
+to help with those tasks.
 
 
 ## Examples
 
 I've included [example code](https://github.com/rgrempel/elm-route-hash/tree/master/examples/elm-architecture-tutorial)
-which turns the old Elm Architecture Tutorial (upgraded to Elm 0.18) into
-a single-page app. I've included three variations:
+which turns the old Elm Architecture Tutorial (upgraded to Elm 0.19) into
+a single-page app. I've included two variations:
 
-* Using the new `RouteUrl` API with the full path.
-* Using the new `RouteUrl` API with the hash only.
-* Using the old `RouteHash` API.
-
-Note that the example code makes heavy use of the `RouteUrl.Builder` module.
-However, as noted above, you don't necessarily need to use that -- a variety
-of alternative approaches are possible.
+* Using the `RouteUrl` API with the full path.
+* Using the `RouteUrl` API with the hash only.

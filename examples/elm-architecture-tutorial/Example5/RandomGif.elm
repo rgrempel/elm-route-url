@@ -3,11 +3,12 @@ module Example5.RandomGif exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
-import Http
+import Http exposing (expectJson)
 import Json.Decode as Json
+import RouteUrl exposing (HistoryEntry(..), UrlChange(..))
 import Task
-import RouteHash exposing (HashUpdate)
-import RouteUrl.Builder exposing (Builder, builder, path, replacePath)
+import Url exposing (Url)
+
 
 
 -- MODEL
@@ -100,37 +101,31 @@ update action model =
 -- VIEW
 
 
-(=>) =
-    (,)
-
-
 view : Model -> Html Action
 view model =
-    div [ style [ "width" => "200px" ] ]
-        [ h2 [ headerStyle ] [ text model.topic ]
-        , div [ imgStyle model.gifUrl ] []
+    div [ style "width" "200px" ]
+        [ h2 headerStyle [ text model.topic ]
+        , div (imgStyle model.gifUrl) []
         , button [ onClick RequestMore ] [ text "More Please!" ]
         ]
 
 
-headerStyle : Attribute any
+headerStyle : List (Attribute any)
 headerStyle =
-    style
-        [ "width" => "200px"
-        , "text-align" => "center"
-        ]
+    [ style "width" "200px"
+    , style "text-align" "center"
+    ]
 
 
-imgStyle : String -> Attribute any
+imgStyle : String -> List (Attribute any)
 imgStyle url =
-    style
-        [ "display" => "inline-block"
-        , "width" => "200px"
-        , "height" => "200px"
-        , "background-position" => "center center"
-        , "background-size" => "cover"
-        , "background-image" => ("url('" ++ url ++ "')")
-        ]
+    [ style "display" "inline-block"
+    , style "width" "200px"
+    , style "height" "200px"
+    , style "background-position" "center center"
+    , style "background-size" "cover"
+    , style "background-image" ("url('" ++ url ++ "')")
+    ]
 
 
 
@@ -154,20 +149,19 @@ queryPair ( key, value ) =
 
 queryEscape : String -> String
 queryEscape string =
-    String.join "+" (String.split "%20" (Http.encodeUri string))
+    String.join "+" (String.split "%20" (Url.percentEncode string))
 
 
 getRandomGif : String -> Cmd Action
 getRandomGif topic =
-    Http.send NewGif <|
-        Http.get (randomUrl topic) decodeUrl
+    Http.get { url = randomUrl topic, expect = expectJson NewGif decodeUrl }
 
 
 randomUrl : String -> String
 randomUrl topic =
     urlWithArgs "http://api.giphy.com/v1/gifs/random"
-        [ "api_key" => "dc6zaTOxFJmzC"
-        , "tag" => topic
+        [ ( "api_key", "dc6zaTOxFJmzC" )
+        , ( "tag", topic )
         ]
 
 
@@ -188,56 +182,34 @@ title =
 
 
 
--- Routing (Old API)
-
-
-{-| We'll generate URLs like "/gifUrl"
--}
-delta2update : Model -> Model -> Maybe HashUpdate
-delta2update previous current =
-    if current.gifUrl == (Tuple.first init).gifUrl then
-        -- If we're waiting for the first random gif, don't generate an entry ...
-        -- wait for the gif to arrive.
-        Nothing
-    else
-        Just (RouteHash.set [ current.gifUrl ])
-
-
-location2action : List String -> List Action
-location2action list =
-    case list of
-        -- If we have a gifUrl, then use it
-        gifUrl :: rest ->
-            [ NewGifFromLocation gifUrl ]
-
-        -- Otherwise, do nothing
-        _ ->
-            []
-
-
-
 -- Routing (New API)
 
 
-delta2builder : Model -> Model -> Maybe Builder
+delta2builder : Model -> Model -> Maybe UrlChange
 delta2builder previous current =
     if current.gifUrl == (Tuple.first init).gifUrl then
         -- If we're waiting for the first random gif, don't generate an entry ...
         -- wait for the gif to arrive.
         Nothing
+
     else
-        builder
-            |> replacePath [ current.gifUrl ]
+        NewPath NewEntry
+            { path = current.gifUrl, query = Nothing, fragment = Nothing }
             |> Just
 
 
-builder2messages : Builder -> List Action
-builder2messages builder =
-    case path builder of
-        -- If we have a gifUrl, then use it
-        gifUrl :: rest ->
-            [ NewGifFromLocation gifUrl ]
-
-        -- Otherwise, do nothing
-        _ ->
+builder2messages : (Url -> Maybe String) -> Url -> List Action
+builder2messages extractPath url =
+    case extractPath url of
+        Nothing ->
             []
+
+        Just path ->
+            case String.split "/" path of
+                -- If we have a gifUrl, then use it
+                gifUrl :: rest ->
+                    [ NewGifFromLocation gifUrl ]
+
+                -- Otherwise, do nothing
+                _ ->
+                    []

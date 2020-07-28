@@ -1,10 +1,15 @@
 module Example8.SpinSquarePair exposing (..)
 
+import Example8.SpinSquare as SpinSquare
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Example8.SpinSquare as SpinSquare
-import RouteHash exposing (HashUpdate)
-import RouteUrl.Builder as Builder exposing (Builder, builder, insertQuery, getQuery)
+import Maybe.Extra
+import RouteUrl exposing (HistoryEntry(..), UrlChange(..))
+import Url exposing (Url)
+import Url.Builder exposing (relative, string)
+import Url.Parser exposing (parse, query)
+import Url.Parser.Query exposing (map2)
+
 
 
 -- MODEL
@@ -25,12 +30,12 @@ init =
         ( right, rightFx ) =
             SpinSquare.init
     in
-        ( Model left right
-        , Cmd.batch
-            [ Cmd.map Left leftFx
-            , Cmd.map Right rightFx
-            ]
-        )
+    ( Model left right
+    , Cmd.batch
+        [ Cmd.map Left leftFx
+        , Cmd.map Right rightFx
+        ]
+    )
 
 
 
@@ -58,31 +63,27 @@ update action model =
                 ( left, fx ) =
                     SpinSquare.update act model.left
             in
-                ( Model left model.right
-                , Cmd.map Left fx
-                )
+            ( Model left model.right
+            , Cmd.map Left fx
+            )
 
         Right act ->
             let
                 ( right, fx ) =
                     SpinSquare.update act model.right
             in
-                ( Model model.left right
-                , Cmd.map Right fx
-                )
+            ( Model model.left right
+            , Cmd.map Right fx
+            )
 
 
 
 -- VIEW
 
 
-(=>) =
-    (,)
-
-
 view : Model -> Html Action
 view model =
-    div [ style [ "display" => "flex" ] ]
+    div [ style "display" "flex" ]
         [ Html.map Left (SpinSquare.view model.left)
         , Html.map Right (SpinSquare.view model.right)
         ]
@@ -101,48 +102,10 @@ title =
 
 
 -- Routing
--- Old `RouteHash` API
-
-
-delta2update : Model -> Model -> Maybe HashUpdate
-delta2update previous current =
-    let
-        left =
-            SpinSquare.delta2update current.left
-
-        right =
-            SpinSquare.delta2update current.right
-    in
-        left
-            |> Maybe.andThen
-                (\l ->
-                    right
-                        |> Maybe.andThen
-                            (\r ->
-                                Just <|
-                                    RouteHash.set [ l, r ]
-                            )
-                )
-
-
-location2action : List String -> List Action
-location2action list =
-    case list of
-        left :: right :: rest ->
-            List.filterMap identity
-                [ Maybe.map Left <| SpinSquare.location2action left
-                , Maybe.map Right <| SpinSquare.location2action right
-                ]
-
-        _ ->
-            []
-
-
-
 -- New `RouteUrl` API
 
 
-delta2builder : Model -> Model -> Maybe Builder
+delta2builder : Model -> Model -> Maybe UrlChange
 delta2builder previous current =
     let
         left : Maybe String
@@ -153,33 +116,43 @@ delta2builder previous current =
         right =
             SpinSquare.delta2update current.right
     in
-        left
-            |> Maybe.andThen
-                (\l ->
-                    right
-                        |> Maybe.andThen
-                            (\r ->
-                                -- Since we can, why not use the query parameters?
-                                Just
-                                    (builder
-                                        |> insertQuery "left" l
-                                        |> insertQuery "right" r
-                                    )
-                            )
-                )
+    left
+        |> Maybe.andThen
+            (\l ->
+                right
+                    |> Maybe.andThen
+                        (\r ->
+                            -- Since we can, why not use the query parameters?
+                            Just <|
+                                NewQuery NewEntry
+                                    { query =
+                                        -- work around https://github.com/elm/url/issues/37
+                                        String.dropLeft 1 <|
+                                            relative [] [ string "left" l, string "right" r ]
+                                    , fragment = Nothing
+                                    }
+                        )
+            )
 
 
-builder2messages : Builder -> List Action
-builder2messages builder =
+builder2messages : Url -> List Action
+builder2messages url =
     -- Remember that you can parse as you like ... this is just
     -- an example, and there are better ways.
     let
-        left =
-            getQuery "left" builder
-                |> List.filterMap (Maybe.map Left << SpinSquare.location2action)
+        workaroundUrl =
+            -- https://github.com/elm/url/issues/17
+            { url | path = "" }
 
-        right =
-            getQuery "right" builder
-                |> List.filterMap (Maybe.map Right << SpinSquare.location2action)
+        parseQuery =
+            query <|
+                map2 List.append
+                    (Url.Parser.Query.map (List.map Left << Maybe.Extra.toList << SpinSquare.location2action) <| Url.Parser.Query.string "left")
+                    (Url.Parser.Query.map (List.map Right << Maybe.Extra.toList << SpinSquare.location2action) <| Url.Parser.Query.string "right")
     in
-        List.append left right
+    case parse parseQuery workaroundUrl of
+        Nothing ->
+            []
+
+        Just actions ->
+            actions

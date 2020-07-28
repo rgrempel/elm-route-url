@@ -1,12 +1,13 @@
 module Example7.RandomGifList exposing (..)
 
+import Example7.RandomGif as RandomGif
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode as Json
-import RouteHash exposing (HashUpdate)
-import RouteUrl.Builder exposing (Builder, builder, path, replacePath)
-import Example7.RandomGif as RandomGif
+import RouteUrl exposing (HistoryEntry(..), UrlChange(..))
+import Url exposing (Url)
+
 
 
 -- MODEL
@@ -56,9 +57,9 @@ update message model =
                 newModel =
                     Model "" (model.gifList ++ [ ( model.uid, newRandomGif ) ]) (model.uid + 1)
             in
-                ( newModel
-                , Cmd.map (SubMsg model.uid) fx
-                )
+            ( newModel
+            , Cmd.map (SubMsg model.uid) fx
+            )
 
         SubMsg msgId msg ->
             let
@@ -68,9 +69,10 @@ update message model =
                             ( newRandomGif, fx ) =
                                 RandomGif.update msg randomGif
                         in
-                            ( ( id, newRandomGif )
-                            , Cmd.map (SubMsg id) fx
-                            )
+                        ( ( id, newRandomGif )
+                        , Cmd.map (SubMsg id) fx
+                        )
+
                     else
                         ( entry, Cmd.none )
 
@@ -79,9 +81,9 @@ update message model =
                         |> List.map subUpdate
                         |> List.unzip
             in
-                ( { model | gifList = newGifList }
-                , Cmd.batch fxList
-                )
+            ( { model | gifList = newGifList }
+            , Cmd.batch fxList
+            )
 
         Set list ->
             let
@@ -104,38 +106,33 @@ update message model =
                 ( models, effects ) =
                     List.unzip modelsAndEffects
             in
-                ( { model
-                    | gifList = models
-                    , uid = List.length models
-                  }
-                , Cmd.batch effects
-                )
+            ( { model
+                | gifList = models
+                , uid = List.length models
+              }
+            , Cmd.batch effects
+            )
 
 
 
 -- VIEW
 
 
-(=>) =
-    (,)
-
-
 view : Model -> Html Action
 view model =
     div []
         [ input
-            [ placeholder "What kind of gifs do you want?"
-            , value model.topic
-            , onEnter Create
-            , onInput Topic
-            , inputStyle
-            ]
+            ([ placeholder "What kind of gifs do you want?"
+             , value model.topic
+             , onEnter Create
+             , onInput Topic
+             ]
+                ++ inputStyle
+            )
             []
         , div
-            [ style
-                [ "display" => "flex"
-                , "flex-wrap" => "wrap"
-                ]
+            [ style "display" "flex"
+            , style "flex-wrap" "wrap"
             ]
             (List.map elementView model.gifList)
         ]
@@ -146,15 +143,14 @@ elementView ( id, model ) =
     Html.map (SubMsg id) (RandomGif.view model)
 
 
-inputStyle : Attribute any
+inputStyle : List (Attribute any)
 inputStyle =
-    style
-        [ ( "width", "100%" )
-        , ( "height", "40px" )
-        , ( "padding", "10px 0" )
-        , ( "font-size", "2em" )
-        , ( "text-align", "center" )
-        ]
+    [ style "width" "100%"
+    , style "height" "40px"
+    , style "padding" "10px 0"
+    , style "font-size" "2em"
+    , style "text-align" "center"
+    ]
 
 
 onEnter : Action -> Attribute Action
@@ -169,6 +165,7 @@ is13 : Int -> Json.Decoder ()
 is13 code =
     if code == 13 then
         Json.succeed ()
+
     else
         Json.fail "not the right key code"
 
@@ -185,34 +182,40 @@ title =
 
 
 
--- Routing (Old API)
+-- Routing (New API)
 
 
-{-| We record each thing in the gifList. Note that we don't track the ID's,
-since in this app there isn't any need to preserve them ... of course, we
-could track them if it mattered.
--}
-delta2update : Model -> Model -> Maybe HashUpdate
-delta2update previous current =
-    current.gifList
-        |> List.filterMap (Tuple.second >> RandomGif.encodeLocation)
-        |> List.concat
-        |> RouteHash.set
+delta2builder : Model -> Model -> Maybe UrlChange
+delta2builder previous current =
+    let
+        path =
+            current.gifList
+                |> List.filterMap (Tuple.second >> RandomGif.encodeLocation)
+                |> List.concat
+    in
+    NewPath NewEntry
+        { path = String.concat <| List.intersperse "/" path, query = Nothing, fragment = Nothing }
         |> Just
 
 
-location2action : List String -> List Action
-location2action list =
-    [ Set <|
-        List.map
-            (\( topic, url ) ->
-                if url == "" then
-                    ( topic, Nothing )
-                else
-                    ( topic, Just url )
-            )
-            (inTwos list)
-    ]
+builder2messages : (Url -> Maybe String) -> Url -> List Action
+builder2messages extractPath url =
+    case extractPath url of
+        Nothing ->
+            []
+
+        Just path ->
+            [ Set <|
+                List.map
+                    (\( topic, u ) ->
+                        if u == "" then
+                            ( topic, Nothing )
+
+                        else
+                            ( topic, Just u )
+                    )
+                    (inTwos (String.split "/" path))
+            ]
 
 
 inTwos : List a -> List ( a, a )
@@ -226,36 +229,5 @@ inTwos list =
                 _ ->
                     result
     in
-        List.reverse <|
-            step list []
-
-
-
--- Routing (New API)
-
-
-delta2builder : Model -> Model -> Maybe Builder
-delta2builder previous current =
-    let
-        path =
-            current.gifList
-                |> List.filterMap (Tuple.second >> RandomGif.encodeLocation)
-                |> List.concat
-    in
-        builder
-            |> replacePath path
-            |> Just
-
-
-builder2messages : Builder -> List Action
-builder2messages builder =
-    [ Set <|
-        List.map
-            (\( topic, url ) ->
-                if url == "" then
-                    ( topic, Nothing )
-                else
-                    ( topic, Just url )
-            )
-            (inTwos (path builder))
-    ]
+    List.reverse <|
+        step list []

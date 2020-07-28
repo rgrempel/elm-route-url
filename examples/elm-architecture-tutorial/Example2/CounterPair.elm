@@ -4,8 +4,12 @@ import Example2.Counter as Counter
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import RouteHash exposing (HashUpdate)
-import RouteUrl.Builder exposing (Builder, builder, insertQuery, getQuery)
+import RouteUrl exposing (HistoryEntry(..), UrlChange(..))
+import Url exposing (Url)
+import Url.Builder exposing (relative, string)
+import Url.Parser exposing (parse, query)
+import Url.Parser.Query exposing (map2)
+
 
 
 -- MODEL
@@ -77,65 +81,42 @@ title =
 
 
 
--- Routing (Old API)
-
-
-{-| To encode state in the URL, we'll just delegate & concatenate
-This will produce partial URLs like /6/7
--}
-delta2update : Model -> Model -> Maybe HashUpdate
-delta2update previous current =
-    -- The implementation is not especially elegant ... perhaps
-    -- we need a few more HashUpdate helpers, to help combining them?
-    [ Counter.delta2update previous.topCounter current.topCounter
-    , Counter.delta2update previous.bottomCounter current.bottomCounter
-    ]
-        |> List.map (Maybe.withDefault [] << Maybe.map RouteHash.extract)
-        |> List.concat
-        |> RouteHash.set
-        |> Just
-
-
-location2action : List String -> List Action
-location2action list =
-    case list of
-        -- We're expecting two things that we can delegate down ...
-        top :: bottom :: rest ->
-            List.concat
-                [ List.map Top <| Counter.location2action [ top ]
-                , List.map Bottom <| Counter.location2action [ bottom ]
-                ]
-
-        -- If we don't have what we expect, then no actions
-        _ ->
-            []
-
-
-
 -- Routing (New API)
 
 
 {-| We'll put the two counters in the query parameters, just for fun
 -}
-delta2builder : Model -> Model -> Maybe Builder
+delta2builder : Model -> Model -> Maybe UrlChange
 delta2builder previous current =
-    builder
-        |> insertQuery "top" (Counter.delta2fragment previous.topCounter current.topCounter)
-        |> insertQuery "bottom" (Counter.delta2fragment previous.bottomCounter current.bottomCounter)
-        |> Just
+    Just <|
+        NewQuery NewEntry <|
+            { query =
+                -- work around https://github.com/elm/url/issues/37
+                String.dropLeft 1 <|
+                    relative []
+                        [ string "top" (Counter.delta2fragment previous.topCounter current.topCounter)
+                        , string "bottom" (Counter.delta2fragment previous.bottomCounter current.bottomCounter)
+                        ]
+            , fragment = Nothing
+            }
 
 
-builder2messages : Builder -> List Action
-builder2messages builder =
+builder2messages : Url -> List Action
+builder2messages url =
     let
-        left =
-            getQuery "top" builder
-                |> List.concatMap Counter.fragment2messages
-                |> List.map Top
+        workaroundUrl =
+            -- https://github.com/elm/url/issues/17
+            { url | path = "" }
 
-        right =
-            getQuery "bottom" builder
-                |> List.concatMap Counter.fragment2messages
-                |> List.map Bottom
+        parseQuery =
+            query <|
+                map2 List.append
+                    (Url.Parser.Query.map (List.map Top << Counter.fragment2messages) <| Url.Parser.Query.string "top")
+                    (Url.Parser.Query.map (List.map Bottom << Counter.fragment2messages) <| Url.Parser.Query.string "bottom")
     in
-        List.append left right
+    case parse parseQuery workaroundUrl of
+        Nothing ->
+            []
+
+        Just actions ->
+            actions

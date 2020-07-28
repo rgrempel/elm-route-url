@@ -1,10 +1,10 @@
-module Main exposing (..)
+module MainWithJustHash exposing (..)
 
-import ExampleViewer exposing (Model, Action)
+import ExampleViewer exposing (Action(..), Model)
 import RouteUrl exposing (RouteUrlProgram)
 
 
-main : RouteUrlProgram Never Model Action
+main : RouteUrlProgram () Model Action
 main =
     RouteUrl.program
         { delta2url = ExampleViewer.delta2hash
@@ -13,4 +13,5 @@ main =
         , update = ExampleViewer.update
         , view = ExampleViewer.view
         , subscriptions = ExampleViewer.subscriptions
+        , onExternalUrlRequest = ExternalUrlRequested
         }

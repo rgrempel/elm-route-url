@@ -1,8 +1,9 @@
-module Example4.Counter exposing (Model, init, Action, update, view, viewWithRemoveButton, Context)
+module Example4.Counter exposing (Action, Context, Model, init, update, view, viewWithRemoveButton)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+
 
 
 -- MODEL
@@ -44,7 +45,7 @@ view : Model -> Html Action
 view model =
     div []
         [ button [ onClick Decrement ] [ text "-" ]
-        , div [ countStyle ] [ text (toString model) ]
+        , div countStyle [ text (String.fromInt model) ]
         , button [ onClick Increment ] [ text "+" ]
         ]
 
@@ -59,19 +60,18 @@ viewWithRemoveButton : Context super -> Model -> Html super
 viewWithRemoveButton context model =
     div []
         [ Html.map context.modify (button [ onClick Decrement ] [ text "-" ])
-        , div [ countStyle ] [ text (toString model) ]
+        , div countStyle [ text (String.fromInt model) ]
         , Html.map context.modify (button [ onClick Increment ] [ text "+" ])
-        , div [ countStyle ] []
+        , div countStyle []
         , button [ onClick context.remove ] [ text "X" ]
         ]
 
 
-countStyle : Attribute any
+countStyle : List (Attribute any)
 countStyle =
-    style
-        [ ( "font-size", "20px" )
-        , ( "font-family", "monospace" )
-        , ( "display", "inline-block" )
-        , ( "width", "50px" )
-        , ( "text-align", "center" )
+        [ style "font-size" "20px"
+        , style "font-family" "monospace"
+        , style "display" "inline-block"
+        , style "width" "50px"
+        , style "text-align" "center"
         ]

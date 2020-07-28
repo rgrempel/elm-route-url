@@ -3,9 +3,10 @@ module Example1.Counter exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
-import RouteHash exposing (HashUpdate)
-import RouteUrl.Builder exposing (Builder, builder, path, replacePath)
+import RouteUrl exposing (HistoryEntry(..), UrlChange(..))
 import String exposing (toInt)
+import Url exposing (Url)
+
 
 
 -- MODEL
@@ -56,20 +57,19 @@ view : Model -> Html Action
 view model =
     div []
         [ button [ onClick Decrement ] [ text "-" ]
-        , div [ countStyle ] [ text (toString model) ]
+        , div countStyle [ text (String.fromInt model) ]
         , button [ onClick Increment ] [ text "+" ]
         ]
 
 
-countStyle : Attribute any
+countStyle : List (Attribute any)
 countStyle =
-    style
-        [ ( "font-size", "20px" )
-        , ( "font-family", "monospace" )
-        , ( "display", "inline-block" )
-        , ( "width", "50px" )
-        , ( "text-align", "center" )
-        ]
+    [ style "font-size" "20px"
+    , style "font-family" "monospace"
+    , style "display" "inline-block"
+    , style "width" "50px"
+    , style "text-align" "center"
+    ]
 
 
 {-| We add a separate function to get a title, which the ExampleViewer uses to
@@ -83,61 +83,32 @@ title =
 
 
 
--- Routing (Old API)
-
-
-{-| For delta2update, we provide our state as the value for the URL.
--}
-delta2update : Model -> Model -> Maybe HashUpdate
-delta2update previous current =
-    Just <|
-        RouteHash.set [ toString current ]
-
-
-{-| For location2action, we generate an action that will restore our state.
--}
-location2action : List String -> List Action
-location2action list =
-    case list of
-        first :: rest ->
-            case toInt first of
-                Ok value ->
-                    [ Set value ]
-
-                Err _ ->
-                    -- If it wasn't an integer, then no action ... we could
-                    -- show an error instead, of course.
-                    []
-
-        _ ->
-            -- If nothing provided for this part of the URL, return empty list
-            []
-
-
-
 -- Routing (New API)
 
 
-delta2builder : Model -> Model -> Maybe Builder
+delta2builder : Model -> Model -> Maybe UrlChange
 delta2builder previous current =
-    builder
-        |> replacePath [ toString current ]
-        |> Just
+    Just <| NewPath NewEntry <| { path = String.fromInt current, query = Nothing, fragment = Nothing }
 
 
-builder2messages : Builder -> List Action
-builder2messages builder =
-    case path builder of
-        first :: rest ->
-            case toInt first of
-                Ok value ->
-                    [ Set value ]
-
-                Err _ ->
-                    -- If it wasn't an integer, then no action ... we could
-                    -- show an error instead, of course.
-                    []
-
-        _ ->
-            -- If nothing provided for this part of the URL, return empty list
+builder2messages : (Url -> Maybe String) -> Url -> List Action
+builder2messages extractPath url =
+    case extractPath url of
+        Nothing ->
             []
+
+        Just path ->
+            case String.split "/" path of
+                first :: rest ->
+                    case toInt first of
+                        Just value ->
+                            [ Set value ]
+
+                        Nothing ->
+                            -- If it wasn't an integer, then no action ... we could
+                            -- show an error instead, of course.
+                            []
+
+                _ ->
+                    -- If nothing provided for this part of the URL, return empty list
+                    []

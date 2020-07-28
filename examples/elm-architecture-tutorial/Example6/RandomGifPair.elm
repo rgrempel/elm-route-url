@@ -1,10 +1,11 @@
 module Example6.RandomGifPair exposing (..)
 
+import Example6.RandomGif as RandomGif
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import RouteHash exposing (HashUpdate)
-import RouteUrl.Builder exposing (Builder, path, appendToPath)
-import Example6.RandomGif as RandomGif
+import RouteUrl exposing (HistoryEntry(..), UrlChange(..))
+import Url exposing (Url)
+
 
 
 -- MODEL
@@ -33,12 +34,12 @@ init =
         ( right, rightFx ) =
             RandomGif.init rightTopic
     in
-        ( Model left right
-        , Cmd.batch
-            [ Cmd.map Left leftFx
-            , Cmd.map Right rightFx
-            ]
-        )
+    ( Model left right
+    , Cmd.batch
+        [ Cmd.map Left leftFx
+        , Cmd.map Right rightFx
+        ]
+    )
 
 
 
@@ -58,18 +59,18 @@ update action model =
                 ( left, fx ) =
                     RandomGif.update act model.left
             in
-                ( Model left model.right
-                , Cmd.map Left fx
-                )
+            ( Model left model.right
+            , Cmd.map Left fx
+            )
 
         Right act ->
             let
                 ( right, fx ) =
                     RandomGif.update act model.right
             in
-                ( Model model.left right
-                , Cmd.map Right fx
-                )
+            ( Model model.left right
+            , Cmd.map Right fx
+            )
 
 
 
@@ -78,7 +79,7 @@ update action model =
 
 view : Model -> Html Action
 view model =
-    div [ style [ ( "display", "flex" ) ] ]
+    div [ style "display" "flex" ]
         [ Html.map Left (RandomGif.view model.left)
         , Html.map Right (RandomGif.view model.right)
         ]
@@ -96,55 +97,10 @@ title =
 
 
 
--- Routing (Old API)
-
-
-delta2update : Model -> Model -> Maybe HashUpdate
-delta2update previous current =
-    let
-        left =
-            Maybe.map RouteHash.extract <|
-                RandomGif.delta2update previous.left current.left
-
-        right =
-            Maybe.map RouteHash.extract <|
-                RandomGif.delta2update previous.right current.right
-    in
-        -- Essentially, we want to combine left and right. I should think about
-        -- how to improve the API for this. We can simplify in this case because
-        -- we happen to know that both sides will be lists of length 1. If the
-        -- lengths could vary, we'd have to do something more complex.
-        left
-            |> Maybe.andThen
-                (\l ->
-                    right
-                        |> Maybe.andThen
-                            (\r -> Just (l ++ r))
-                )
-            |> Maybe.map RouteHash.set
-
-
-location2action : List String -> List Action
-location2action list =
-    -- This is simplified because we know that each sub-module will supply a
-    -- list with one element ... otherwise, we'd have to do something more
-    -- complex.
-    case list of
-        left :: right :: rest ->
-            List.concat
-                [ List.map Left <| RandomGif.location2action [ left ]
-                , List.map Right <| RandomGif.location2action [ right ]
-                ]
-
-        _ ->
-            []
-
-
-
 -- Routing (New API)
 
 
-delta2builder : Model -> Model -> Maybe Builder
+delta2builder : Model -> Model -> Maybe UrlChange
 delta2builder previous current =
     let
         left =
@@ -153,29 +109,31 @@ delta2builder previous current =
         right =
             RandomGif.delta2builder previous.right current.right
     in
-        -- Essentially, we want to combine left and right.
-        left
-            |> Maybe.andThen
-                (\l ->
-                    right
-                        |> Maybe.andThen
-                            (\r ->
-                                Just <| appendToPath (path r) l
-                            )
-                )
+    -- Essentially, we want to combine left and right.
+    left
+        |> Maybe.andThen
+            (\l ->
+                right
+                    |> Maybe.andThen
+                        (\r ->
+                            Just <| NewPath NewEntry { path = l ++ "/" ++ r, query = Nothing, fragment = Nothing }
+                        )
+            )
 
 
-builder2messages : Builder -> List Action
-builder2messages builder =
-    -- This is simplified because we know that each sub-module will supply a
-    -- list with one element ... otherwise, we'd have to do something more
-    -- complex.
-    case path builder of
-        left :: right :: rest ->
-            List.concat
-                [ List.map Left <| RandomGif.location2action [ left ]
-                , List.map Right <| RandomGif.location2action [ right ]
-                ]
-
-        _ ->
+builder2messages : (Url -> Maybe String) -> Url -> List Action
+builder2messages extractPath url =
+    case extractPath url of
+        Nothing ->
             []
+
+        Just path ->
+            case String.split "/" path of
+                left :: right :: rest ->
+                    List.concat
+                        [ List.map Left <| RandomGif.location2action [ left ]
+                        , List.map Right <| RandomGif.location2action [ right ]
+                        ]
+
+                _ ->
+                    []

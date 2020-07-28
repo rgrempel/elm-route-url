@@ -1,8 +1,9 @@
-module Example3.Counter exposing (Model, init, Action, update, view)
+module Example3.Counter exposing (Action, Model, init, update, view)
 
 import Html exposing (..)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
+
 
 
 -- MODEL
@@ -44,17 +45,16 @@ view : Model -> Html Action
 view model =
     div []
         [ button [ onClick Decrement ] [ text "-" ]
-        , div [ countStyle ] [ text (toString model) ]
+        , div countStyle [ text (String.fromInt model) ]
         , button [ onClick Increment ] [ text "+" ]
         ]
 
 
-countStyle : Attribute any
+countStyle : List (Attribute any)
 countStyle =
-    style
-        [ ( "font-size", "20px" )
-        , ( "font-family", "monospace" )
-        , ( "display", "inline-block" )
-        , ( "width", "50px" )
-        , ( "text-align", "center" )
-        ]
+    [ style "font-size" "20px"
+    , style "font-family" "monospace"
+    , style "display" "inline-block"
+    , style "width" "50px"
+    , style "text-align" "center"
+    ]
