@@ -1,21 +1,18 @@
-module Example2.Counter
-    exposing
-        ( Model
-        , init
-        , Action
-        , update
-        , view
-        , delta2update
-        , location2action
-        , delta2fragment
-        , fragment2messages
-        )
+module Example2.Counter exposing
+    ( Action
+    , Model
+    , delta2fragment
+    , fragment2messages
+    , init
+    , update
+    , view
+    )
 
 import Html exposing (..)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
-import RouteHash exposing (HashUpdate)
 import String exposing (toInt)
+
 
 
 -- MODEL
@@ -64,51 +61,19 @@ view : Model -> Html Action
 view model =
     div []
         [ button [ onClick Decrement ] [ text "-" ]
-        , div [ countStyle ] [ text (toString model) ]
+        , div countStyle [ text (String.fromInt model) ]
         , button [ onClick Increment ] [ text "+" ]
         ]
 
 
-countStyle : Attribute any
+countStyle : List (Attribute any)
 countStyle =
-    style
-        [ ( "font-size", "20px" )
-        , ( "font-family", "monospace" )
-        , ( "display", "inline-block" )
-        , ( "width", "50px" )
-        , ( "text-align", "center" )
-        ]
-
-
-
--- Routing (Old API)
-
-
-{-| For delta2update, we provide our state as the value for the URL
--}
-delta2update : Model -> Model -> Maybe HashUpdate
-delta2update previous current =
-    Just <|
-        RouteHash.set [ toString current ]
-
-
-{-| For location2action, we generate an action that will restore our state
--}
-location2action : List String -> List Action
-location2action list =
-    case list of
-        first :: rest ->
-            case toInt first of
-                Ok value ->
-                    [ Set value ]
-
-                Err _ ->
-                    -- If it wasn't an integer, then no action
-                    []
-
-        _ ->
-            -- If nothing provided for this part of the URL, return empty list
-            []
+    [ style "font-size" "20px"
+    , style "font-family" "monospace"
+    , style "display" "inline-block"
+    , style "width" "50px"
+    , style "text-align" "center"
+    ]
 
 
 
@@ -119,16 +84,21 @@ location2action list =
 -}
 delta2fragment : Model -> Model -> String
 delta2fragment previous current =
-    toString current
+    String.fromInt current
 
 
 {-| We'll just take a string
 -}
-fragment2messages : String -> List Action
-fragment2messages fragment =
-    case toInt fragment of
-        Ok value ->
-            [ Set value ]
+fragment2messages : Maybe String -> List Action
+fragment2messages mFragment =
+    case mFragment of
+        Just fragment ->
+            case toInt fragment of
+                Just value ->
+                    [ Set value ]
 
-        Err _ ->
+                Nothing ->
+                    []
+
+        Nothing ->
             []

@@ -3,9 +3,11 @@ module Example7.RandomGif exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
-import Http
+import Http exposing (expectJson)
 import Json.Decode as Json
 import Task
+import Url
+
 
 
 -- MODEL
@@ -30,6 +32,7 @@ init topic gifUrl =
     ( Model topic gifUrl
     , if gifUrl == Nothing then
         getRandomGif topic
+
       else
         Cmd.none
     )
@@ -64,36 +67,30 @@ update action model =
 -- VIEW
 
 
-(=>) =
-    (,)
-
-
 view : Model -> Html Action
 view model =
-    div [ style [ "width" => "200px" ] ]
-        [ h2 [ headerStyle ] [ text model.topic ]
-        , div [ imgStyle (Maybe.withDefault "assets/waiting.gif" model.gifUrl) ] []
+    div [ style "width" "200px" ]
+        [ h2 headerStyle [ text model.topic ]
+        , div ( imgStyle (Maybe.withDefault "assets/waiting.gif" model.gifUrl) ) []
         , button [ onClick RequestMore ] [ text "More Please!" ]
         ]
 
 
-headerStyle : Attribute any
+headerStyle : List (Attribute any)
 headerStyle =
-    style
-        [ "width" => "200px"
-        , "text-align" => "center"
+        [ style "width" "200px"
+        , style "text-align" "center"
         ]
 
 
-imgStyle : String -> Attribute any
+imgStyle : String -> List (Attribute any)
 imgStyle url =
-    style
-        [ "display" => "inline-block"
-        , "width" => "200px"
-        , "height" => "200px"
-        , "background-position" => "center center"
-        , "background-size" => "cover"
-        , "background-image" => ("url('" ++ url ++ "')")
+        [ style "display" "inline-block"
+        , style "width" "200px"
+        , style "height" "200px"
+        , style "background-position" "center center"
+        , style "background-size" "cover"
+        , style "background-image" ("url('" ++ url ++ "')")
         ]
 
 
@@ -118,20 +115,19 @@ queryPair ( key, value ) =
 
 queryEscape : String -> String
 queryEscape string =
-    String.join "+" (String.split "%20" (Http.encodeUri string))
+    String.join "+" (String.split "%20" (Url.percentEncode string))
 
 
 getRandomGif : String -> Cmd Action
 getRandomGif topic =
-    Http.send NewGif <|
-        Http.get (randomUrl topic) decodeUrl
+        Http.get { url = randomUrl topic, expect = expectJson NewGif decodeUrl }
 
 
 randomUrl : String -> String
 randomUrl topic =
     urlWithArgs "http://api.giphy.com/v1/gifs/random"
-        [ "api_key" => "dc6zaTOxFJmzC"
-        , "tag" => topic
+        [ ("api_key", "dc6zaTOxFJmzC")
+        , ("tag", topic)
         ]
 
 
@@ -150,8 +146,9 @@ case a little.
 encodeLocation : Model -> Maybe (List String)
 encodeLocation model =
     -- Don't encode if there's no gifUrl
-    if (model.gifUrl == Nothing) then
+    if model.gifUrl == Nothing then
         Nothing
+
     else
         Just
             [ model.topic

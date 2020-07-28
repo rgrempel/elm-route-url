@@ -4,10 +4,11 @@ import Example4.Counter as Counter
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import RouteHash exposing (HashUpdate)
-import RouteUrl.Builder exposing (Builder, builder, path, replacePath)
-import Result.Extra
+import Maybe.Extra
+import RouteUrl exposing (HistoryEntry(..), UrlChange(..))
 import String
+import Url exposing (Url)
+
 
 
 -- MODEL
@@ -62,10 +63,11 @@ update action model =
                 updateCounter ( counterID, counterModel ) =
                     if counterID == id then
                         ( counterID, Counter.update counterAction counterModel )
+
                     else
                         ( counterID, counterModel )
             in
-                { model | counters = List.map updateCounter model.counters }
+            { model | counters = List.map updateCounter model.counters }
 
         Set list ->
             let
@@ -76,9 +78,9 @@ update action model =
                         )
                         list
             in
-                { counters = counters
-                , nextID = List.length counters
-                }
+            { counters = counters
+            , nextID = List.length counters
+            }
 
 
 
@@ -91,7 +93,7 @@ view model =
         insert =
             button [ onClick Insert ] [ text "Add" ]
     in
-        div [] (insert :: List.map viewCounter model.counters)
+    div [] (insert :: List.map viewCounter model.counters)
 
 
 viewCounter : ( ID, Counter.Model ) -> Html Action
@@ -100,7 +102,7 @@ viewCounter ( id, model ) =
         context =
             Counter.Context (Modify id) (Remove id)
     in
-        Counter.viewWithRemoveButton context model
+    Counter.viewWithRemoveButton context model
 
 
 {-| We add a separate function to get a title, which the ExampleViewer uses to
@@ -115,63 +117,38 @@ title =
 
 
 
--- Routing (Old API)
-
-
-{-| You could do this in a variety of ways. We'll ignore the ID's, and just
-encode the value of each Counter in the list -- so we'll end up with
-something like /0/1/5 or whatever. When we recreate that, we won't
-necessarily have the same IDs, but that doesn't matter for this example.
-If it mattered, we'd have to do this a different way.
--}
-delta2update : Model -> Model -> Maybe HashUpdate
-delta2update previous current =
-    -- We'll take advantage of the fact that we know that the counter
-    -- is just an Int ... no need to be super-modular here.
-    List.map (toString << Tuple.second) current.counters
-        |> RouteHash.set
-        |> Just
-
-
-location2action : List String -> List Action
-location2action list =
-    let
-        result =
-            List.map String.toInt list
-                |> Result.Extra.combine
-    in
-        case result of
-            Ok ints ->
-                [ Set ints ]
-
-            Err _ ->
-                []
-
-
-
 -- Routing (New API)
 
 
-delta2builder : Model -> Model -> Maybe Builder
+delta2builder : Model -> Model -> Maybe UrlChange
 delta2builder previous current =
     -- We'll take advantage of the fact that we know that the counter
     -- is just an Int ... no need to be super-modular here.
-    builder
-        |> replacePath (List.map (toString << Tuple.second) current.counters)
-        |> Just
+    Just <|
+        NewPath NewEntry <|
+            { path = String.concat <| List.intersperse "/" <| List.map (String.fromInt << Tuple.second) current.counters
+            , query = Nothing
+            , fragment = Nothing
+            }
 
 
-builder2messages : Builder -> List Action
-builder2messages builder =
-    let
-        result =
-            path builder
-                |> List.map String.toInt
-                |> Result.Extra.combine
-    in
-        case result of
-            Ok ints ->
-                [ Set ints ]
+builder2messages : (Url -> Maybe String) -> Url -> List Action
+builder2messages extractPath url =
+    case extractPath url of
+        Nothing ->
+            []
 
-            Err _ ->
-                []
+        Just path ->
+            let
+                result =
+                    path
+                        |> String.split "/"
+                        |> List.map String.toInt
+                        |> Maybe.Extra.combine
+            in
+            case result of
+                Just ints ->
+                    [ Set ints ]
+
+                Nothing ->
+                    []

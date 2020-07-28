@@ -1,7 +1,7 @@
 # The Elm Architecture Tutorial as a single page app
 
 In order to illustrate how to use
-[elm-route-url](https://github.com/rgrempel/elm-route-url), I though it might
+[elm-route-url](https://github.com/rgrempel/elm-route-url), I thought it might
 be useful to take some familiar code and show how to turn it into a single-page
 app with bookmarkable URLs and a working "forward" and "back" button.
 
@@ -21,8 +21,7 @@ best just to
 [look at the code](https://github.com/rgrempel/elm-route-url/blob/master/examples/elm-architecture-tutorial/ExampleViewer.elm).
 
 You'll see near the end of the `ExampleViewer` code that I've implemented
-examples for the old `RouteHash` API, as well as the new `RouteUrl` API,
-either using the full URL or just the hash.
+the API either using the full URL or just the hash.
 
 Here are some things you can try:
 
@@ -55,7 +54,7 @@ So, depending on how you conceive of that, there isn't necessarily a lot more
 in the examples that really qualifies as "view model" state. But, I did
 illustrate how to do multiple layers of state anyway, just so you can see how.
 
-*   Try incrementing an decrementing a counter in Example 1. Look at how the
+*   Try incrementing and decrementing a counter in Example 1. Look at how the
     URL changes. Try the forward and back buttons. Try bookmarking and
     activating a bookmark. Try reloading a page. In the previous example,
     the examples would reset, whereas now they should maintain state.
@@ -70,11 +69,10 @@ I hope that helps get you started.
 
 Here are links to three variations that you can try out live.
 
-* the [old API](http://rgrempel.github.io/elm-route-url/examples/elm-architecture-tutorial/old-api.html) from elm-route-hash (`MainWithOldAPI.elm`)
-* the new API, using the [full URL](http://rgrempel.github.io/elm-route-url/examples/elm-architecture-tutorial/full-url.html) (`MainWithFullUrl.elm`)
-* the new API, using the [hash only](http://rgrempel.github.io/elm-route-url/examples/elm-architecture-tutorial/just-hash.html) (`MainWithJustHash.elm`)
+* a version using the [full URL](http://rgrempel.github.io/elm-route-url/examples/elm-architecture-tutorial/full-url.html) (`MainWithFullUrl.elm`)
+* a version using the [hash only](http://rgrempel.github.io/elm-route-url/examples/elm-architecture-tutorial/just-hash.html) (`MainWithJustHash.elm`)
 
-To run the code locally instead, start up `elm-reactor` in this directory. You
+To run the code locally instead, start up `elm reactor` in this directory. You
 can then click on one of the .elm files mentioned above to see that variation
 of the example.
 
